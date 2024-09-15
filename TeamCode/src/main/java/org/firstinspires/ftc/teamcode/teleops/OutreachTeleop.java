@@ -9,12 +9,13 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.Range;
 
-import org.checkerframework.checker.index.qual.NonNegative;
 import org.firstinspires.ftc.teamcode.robots.Octonaut;
 import org.firstinspires.ftc.teamcode.robots.Outreach;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
+
+import javax.annotation.Nonnegative;
 
 @TeleOp(name = "Outreach Teleop", group = "Main")
 public class OutreachTeleop extends LinearOpMode {
@@ -23,7 +24,7 @@ public class OutreachTeleop extends LinearOpMode {
 
     private int lastSlidePos = 0;
 
-    public float[] moveDriveTrain(@NonNull Gamepad gamepad, @NonNegative float speedFactor) {
+    public float[] moveDriveTrain(@NonNull Gamepad gamepad, @Nonnegative float speedFactor) {
         float FBinput = gamepad.left_stick_y;
         if(gamepad.dpad_up) FBinput = 1;
         else if(gamepad.dpad_down) FBinput = -1;

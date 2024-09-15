@@ -9,12 +9,13 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.Range;
 
-import org.checkerframework.checker.index.qual.NonNegative;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 
 import org.firstinspires.ftc.teamcode.robots.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robots.Octonaut;
+
+import javax.annotation.Nonnegative;
 
 @TeleOp(name = "Drivetrain Only", group = "Main")
 public class DrivetrainOnly extends LinearOpMode {
@@ -22,7 +23,7 @@ public class DrivetrainOnly extends LinearOpMode {
     MecanumDrive robot;
     public final DecimalFormat fourDecimals = new DecimalFormat("#.0000");
 
-    public float[] moveDriveTrain(@NonNull Gamepad gamepad, @NonNegative float speedFactor) {
+    public float[] moveDriveTrain(@NonNull Gamepad gamepad, @Nonnegative float speedFactor) {
         float FBinput = gamepad.left_stick_y;
         if(gamepad.dpad_up) FBinput = 1;
         else if(gamepad.dpad_down) FBinput = -1;

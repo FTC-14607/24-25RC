@@ -9,12 +9,13 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.Range;
 
-import org.checkerframework.checker.index.qual.NonNegative;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 
 import org.firstinspires.ftc.teamcode.robots.Inktonaut;
 import org.firstinspires.ftc.teamcode.robots.Octonaut;
+
+import javax.annotation.Nonnegative;
 
 @TeleOp(name = "Main Linear TeleOp", group = "Main")
 public class Gaybians extends LinearOpMode {
@@ -38,7 +39,7 @@ public class Gaybians extends LinearOpMode {
      * @param speedFactor Factor which the inputs are multiplied
      * @return driveTrainPowers, an array of all the powers the drivetrain is set to (FL, BL, FR, BR)
      */
-    public float[] moveDriveTrain(@NonNull Gamepad gamepad, @NonNegative float speedFactor) {
+    public float[] moveDriveTrain(@NonNull Gamepad gamepad, @Nonnegative float speedFactor) {
         //control.drivetrain represents all 4 wheels below?
         //control.frontLEft, backLeft, frontRight, backRight ... represent
         float FBInput = gamepad.left_stick_y; //either input is analog of digital based on which piece of gamepad is pressed
