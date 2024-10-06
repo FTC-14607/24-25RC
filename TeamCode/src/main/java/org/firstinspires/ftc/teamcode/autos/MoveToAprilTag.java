@@ -4,6 +4,7 @@ import android.util.Size;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
@@ -36,6 +37,7 @@ import java.util.stream.Stream;
 
 // USE SCRCPY TO VIEW CAMERA STREAM DURING OPMODE
 
+@Disabled
 @Config
 @Autonomous(name = "AprilTag Auto", group = "Main")
 public class MoveToAprilTag extends LinearOpMode {

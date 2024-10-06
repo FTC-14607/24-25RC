@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleops;
 
 import androidx.annotation.NonNull;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,6 +18,7 @@ import org.firstinspires.ftc.teamcode.robots.Octonaut;
 
 import javax.annotation.Nonnegative;
 
+@Disabled
 @TeleOp(name = "Main Linear TeleOp", group = "Main")
 public class Gaybians extends LinearOpMode {
 

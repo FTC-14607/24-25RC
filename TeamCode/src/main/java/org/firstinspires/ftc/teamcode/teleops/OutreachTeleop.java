@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleops;
 
 import androidx.annotation.NonNull;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,6 +18,7 @@ import java.util.Arrays;
 
 import javax.annotation.Nonnegative;
 
+@Disabled
 @TeleOp(name = "Outreach Teleop", group = "Main")
 public class OutreachTeleop extends LinearOpMode {
     Outreach robot;
@@ -55,18 +57,6 @@ public class OutreachTeleop extends LinearOpMode {
         return driveTrainPowers;
     }
 
-    public int moveSlides(@NonNull Gamepad gamepad) {
-        int slidePos = robot.getSlidePos();
-        int setPos = slidePos;
-        if (gamepad.b) {setPos = 300;}
-        else if (gamepad.a) {setPos = Octonaut.GROUND; }
-        setPos = Range.clip(setPos, Octonaut.SLIDEBOTTOM, Octonaut.SLIDETOP);
-        robot.setSlidePos(setPos);
-
-        slidePos = robot.getSlidePos();
-        return slidePos;
-    }
-
     public void runOpMode() {
         robot = new Outreach(this);
         float speedFactor = 1f;
@@ -79,11 +69,9 @@ public class OutreachTeleop extends LinearOpMode {
             telemetry.addData("imu", robot.imu.getAngularOrientation());
 //            telemetry.addData("context", robot.odometry.getContext());
             float[] driveTrainPowers = moveDriveTrain(gamepad1, speedFactor);
-            int slidePos = moveSlides(gamepad2);
 
             telemetry.addData("Speed factor", speedFactor);
             telemetry.addData("Drivetrain powers", Arrays.toString(driveTrainPowers));
-            telemetry.addData("Slide position", slidePos);
             telemetry.update();
         }
     }

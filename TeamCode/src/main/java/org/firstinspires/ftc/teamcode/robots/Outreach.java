@@ -1,81 +1,71 @@
 package org.firstinspires.ftc.teamcode.robots;
 
 import com.arcrobotics.ftclib.controller.PIDFController;
+import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.arcrobotics.ftclib.hardware.motors.MotorEx;
+import com.arcrobotics.ftclib.kinematics.Odometry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.Range;
 
-public class Outreach extends MecanumDrive {
-    public DcMotorEx rightSlide, leftSlide;
-    public DcMotorEx[] slides;
-    public PIDFController slidepidfcontroller;
+import org.firstinspires.ftc.teamcode.util.odometry.FTCLibOdometry;
 
-    public final static int SLIDEBOTTOM = 40;
-    public final static int SLIDETOP = 960;
+
+public class Outreach extends MecanumDrive {
+
+    MotorEx odoRight;
+    MotorEx odoLeft;
+    MotorEx odoMiddle;
+    public FTCLibOdometry odo;
+
+    public static double TRACK_WIDTH = 8.72; // 20.15 cm, dist between right and left odo
+    public static double CENTER_WHEEL_OFFSET = 0; // cm
+    // GoBilda Odometry Pod; 2000 ticks/rev, 48 mm diameter
+    public static double TICKS_TO_INCHES = 3.14159 * (4.8 / 2.54) / 2000;
+
 
     public Outreach(LinearOpMode opmode){
         super(opmode);
         // Drivetrain Motors: goBilda 5203 Series Yellow Jacket Planetary Gear Motor, 312 RPM
-        dimensions = new RobotDimensions(-1, -1, -1, 9.6, 145);
+        dimensions = new RobotDimensions(-1, -1, -1, 4.8, 2000);
 
-        //slides
-        rightSlide = hardwareMap.get(DcMotorEx.class, "RightSlide");
-        leftSlide = hardwareMap.get(DcMotorEx.class, "LeftSlide");
-        slides = new DcMotorEx[]{rightSlide, leftSlide};
-        for(DcMotorEx m: slides) {
-            m.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-            m.setVelocityPIDFCoefficients(15.0, 2.0, 0.0, 0);
-            m.setPositionPIDFCoefficients(10.0);
-        }
-        resetSlideEncoders();
+        // ODOMETRY
+        odoRight = new MotorEx(hardwareMap, "frontLeft");
+        odoLeft = new MotorEx(hardwareMap, "backRight");
+        odoMiddle = new MotorEx(hardwareMap, "frontRight");
 
-        slidepidfcontroller = new PIDFController(50, 0.05, 0, 0);
-        //slidepidfcontroller.setIntegrationBounds(-5, 5);
-        slidepidfcontroller.setTolerance(3);
+        odo = new FTCLibOdometry(odoLeft, odoRight, odoMiddle, TRACK_WIDTH, CENTER_WHEEL_OFFSET, TICKS_TO_INCHES);
+
     }
 
-    public void resetSlideEncoders() {
-        setRunMode(slides, DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        // behavior may vary between motor models, so after resetting set all slides back to RUN_TO_POSITION
-        for (DcMotorEx motor: slides) {
-            motor.setTargetPosition(motor.getCurrentPosition());
-            motor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        }
+    public void forwardOdo(double distance) {
+
+        PIDFController pid = new PIDFController(0.05, 0, 0, 0);
+        pid.setTolerance(0.1);
+
+        odo.update();
+        double firstPos = odo.getPose().getY();
+
+        pid.reset();
+        pid.setSetPoint(distance);
+
+        do {
+            double pos = odo.getPose().getY();
+            double power = Range.clip(pid.calculate(pos - firstPos), -1, 1);
+
+            frontRight.setPower(power);
+            frontLeft.setPower(power);
+            backRight.setPower(power);
+            backLeft.setPower(power);
+
+        } while (opMode.opModeIsActive() && !opMode.isStopRequested() && !pid.atSetPoint());
+
+        stop();
+
     }
 
     // ------------------------------------ INTERACTOR METHODS -------------------------------------
 
-    /**
-     * Returns the slides current position
-     * @return Left slides current position ~(0-960)
-     */
-    public int getSlidePos() { return leftSlide.getCurrentPosition(); }
 
-    /**
-     * Sets the velocity of the slides
-     * @param velocity
-     */
-    public void setSlideVelo(double velocity){
-        double currentPos = getSlidePos();
-        // prevents setting velocity if it will exceed the limits
-        if ( (currentPos>=955 && velocity>0) || (currentPos<=0 && velocity<0) ) velocity = 0;
-        setRunMode(slides, DcMotorEx.RunMode.RUN_USING_ENCODER);
-        rightSlide.setVelocity(-velocity);
-        leftSlide.setVelocity(velocity);
-    }
-
-    /**
-     * Extend/retract slides to desired height using encoders
-     * @param height - (ticks)
-     */
-    public void setSlidePos(int height) {
-        height = Range.clip(height, SLIDEBOTTOM, SLIDETOP);
-        int change = height - getSlidePos();
-        rightSlide.setTargetPosition(-height);
-        leftSlide.setTargetPosition(height);
-        for(DcMotorEx slide:slides) {
-            slide.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            slide.setVelocity( (change>0)? 1200:1000 );
-        }
-    }
 }

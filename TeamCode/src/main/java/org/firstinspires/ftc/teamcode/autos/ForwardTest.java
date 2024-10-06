@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.autos;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.robots.Inktonaut;
 
+@Disabled
 @Autonomous(name = "Test Auto", group = "Main")
 public class ForwardTest extends LinearOpMode {
     Inktonaut robot;

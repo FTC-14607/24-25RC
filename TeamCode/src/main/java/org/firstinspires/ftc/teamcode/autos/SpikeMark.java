@@ -6,6 +6,7 @@ import org.firstinspires.ftc.teamcode.robots.Octonaut;
 import org.firstinspires.ftc.teamcode.util.vision.PropDetectProcessor;
 import org.firstinspires.ftc.vision.VisionProcessor;
 
+
 public class SpikeMark {
     public PropDetectProcessor spikeProcessor = null;
     private LinearOpMode opmode = null;

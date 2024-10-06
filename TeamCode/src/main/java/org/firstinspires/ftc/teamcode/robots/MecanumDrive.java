@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.util.odometry.FTCLibOdometry;
 
 import java.util.List;
 
@@ -20,9 +21,6 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
 
     public DcMotorEx frontRight, frontLeft, backRight, backLeft;
     public DcMotorEx[] drivetrain;
-
-    public PIDFCoefficients internalDrivePosPIDF = new PIDFCoefficients(10, 0.05, 0, 0, MotorControlAlgorithm.LegacyPID);
-    public PIDFCoefficients internalDriveVeloPIDF = new PIDFCoefficients(10, 3, 0, 0, MotorControlAlgorithm.LegacyPID);
 
     public double rotateP = 3.5, rotateI = 0.4, rotateD = 0.2, rotateF = 0.3;
     public PIDFController rotatePIDF;
@@ -47,17 +45,15 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
     public MecanumDrive(LinearOpMode opModeInstance) {
         super(opModeInstance);
 
-        frontRight = hardwareMap.get(DcMotorEx.class, "rightFront");
-        frontLeft = hardwareMap.get(DcMotorEx.class, "leftFront");
-        backRight = hardwareMap.get(DcMotorEx.class, "rightRear");
-        backLeft = hardwareMap.get(DcMotorEx.class, "leftRear");
+        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
         drivetrain = new DcMotorEx[]{frontRight, frontLeft, backRight, backLeft};
 
         frontLeft.setDirection(DcMotorEx.Direction.REVERSE);
         backLeft.setDirection(DcMotorEx.Direction.REVERSE);
         for (DcMotorEx motor : drivetrain) {
-//            motor.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, internalDrivePosPIDF);
-//            motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, internalDriveVeloPIDF);
             motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         }
 
