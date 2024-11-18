@@ -12,8 +12,13 @@ import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.teamcode.util.odometry.FTCLibOdometry;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Config
@@ -123,6 +128,50 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
 
     // --------------------------------- MOVEMENT METHODS ------------------------------------------
 
+    /**
+     *
+     * @param throttle
+     * @param strafe
+     * @param rotate
+     * @return
+     */
+    public double[] drive(double throttle, double strafe, double rotate) {
+        double fRPower = throttle - strafe - rotate;
+        double fLPower = throttle + strafe + rotate;
+        double bRPower = throttle + strafe - rotate;
+        double bLPower = throttle - strafe + rotate;
+
+        double[] powers = { fRPower, fLPower, bRPower, bLPower };
+
+        // normalize power to [-1, 1]
+        double maxInput = Math.max(
+                Math.abs(fRPower), Math.max(
+                Math.abs(fLPower), Math.max(
+                Math.abs(bRPower),
+                Math.abs(bLPower)
+        )));
+
+        if (maxInput > 1)
+            for (int i = 0; i < 4; i++)
+                powers[i] /= maxInput;
+
+        // set power
+        for (int i = 0; i < 4; i++)
+            drivetrain[i].setPower(powers[i]);
+
+        // telemetry
+        if (true) {
+            telemetry.addData("Drive Inputs (t,s,r)",
+                    "%5.2f | %5.2f | %5.2f", throttle, strafe, rotate);
+            telemetry.addData("Normalizing Inputs", maxInput > 1);
+            telemetry.addData("Drive Powers (fr,fl,br,bl)",
+                    "%5.2f | %5.2f | %5.2f | %5.2f", fRPower, fLPower, bRPower, bLPower);
+        }
+
+        return powers;
+    }
+
+
     public void stop() { for (DcMotor m : drivetrain) m.setPower(0); }
 
     public void brake() {
@@ -197,12 +246,18 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
             pid.reset();
             pid.setSetPoint(tickDistance);
         }
-        double firstHeading = imu.getAngularOrientation().firstAngle;
+        orientation = imu.getRobotOrientation()
+        myRobotOrientation = imu.getRobotOrientation(
+                AxesReference.INTRINSIC,
+                AxesOrder.XYZ,
+                AngleUnit.DEGREES
+        );
+        double firstHeading = imu.getRobotOrientation().firstAngle;
         boolean flip = firstHeading < -90 || firstHeading > 90;
         headKeepPIDF.setSetPoint(flip && firstHeading<0 ? -firstHeading:firstHeading);
         do {
             //float angleCorrection = 0;
-            float heading = imu.getAngularOrientation().firstAngle;
+            float heading = imu.getRobotOrientation().firstAngle;
             // account for the fact that the angle goes 179, 180, then -180, -179
             double angleCorrection = headKeepPIDF.calculate(heading + (flip && heading<0 ? 360:0));
             frontRight.setVelocity(FRPIDF.calculate(frontRight.getCurrentPosition()) + angleCorrection);
@@ -228,12 +283,12 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
         FLStrafePID.setSetPoint(tickDistance);
         BRStrafePID.setSetPoint(tickDistance); //br
         BLStrafePID.setSetPoint(-tickDistance);
-        double firstHeading = imu.getAngularOrientation().firstAngle;
+        double firstHeading = imu.getRobotOrientation().firstAngle;
         boolean flip = firstHeading < -90 || firstHeading > 90;
         headKeepPIDF.setSetPoint(flip && firstHeading<0 ? -firstHeading:firstHeading);
         do {
             float angleCorrection = 0;
-            float heading = imu.getAngularOrientation().firstAngle;
+            float heading = imu.getRobotOrientation().firstAngle;
             // account for the fact that the angle goes 179, 180, then -180, -179
             //float angleCorrection = headingPIDFController.calculate(heading + (flip && heading<0 ? 360:0));
             frontRight.setVelocity(FRStrafePID.calculate(frontRight.getCurrentPosition()) + angleCorrection);
@@ -254,14 +309,14 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
      */
     public void rotate(double degrees) {
         double motorSpeed = 0;
-        float lastAngle = -imu.getAngularOrientation().firstAngle;
+        float lastAngle = -imu.getRobotOrientation().firstAngle;
         degrees += lastAngle;
         boolean flip = degrees > 179 || degrees < -179;
         boolean sign = lastAngle >= 0; // true if angle positive, false if negative
         rotatePIDF.reset();
         rotatePIDF.setSetPoint(degrees);
         do {
-            lastAngle = -imu.getAngularOrientation().firstAngle;
+            lastAngle = -imu.getRobotOrientation().firstAngle;
             if (flip) {
                 // if angle was originally positive but the current angle is negative
                 // add 360 to flip the sign

@@ -51,7 +51,8 @@ public class Outreach extends MecanumDrive {
         pid.setSetPoint(distance);
 
         do {
-            double pos = odo.getPose().getY();
+            odo.update();
+            double pos = odo.getPose().getX();
             double power = Range.clip(pid.calculate(pos - firstPos), -1, 1);
 
             frontRight.setPower(power);

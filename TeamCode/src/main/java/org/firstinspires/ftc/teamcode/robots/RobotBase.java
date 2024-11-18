@@ -4,8 +4,10 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import java.util.List;
 
@@ -17,7 +19,8 @@ public abstract class RobotBase {
     public LinearOpMode opMode;
     public Telemetry telemetry;
     public HardwareMap hardwareMap;
-    public BNO055IMU imu;
+    public IMU imu;
+    public Orientation orientation;
 
     public static class RobotDimensions {
         // INCHES
@@ -50,12 +53,7 @@ public abstract class RobotBase {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
 
         //imu
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        BNO055IMU.Parameters imuParams = new BNO055IMU.Parameters();
-        imuParams.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        imuParams.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        imuParams.calibrationDataFile = "BNO055IMUCalibration.json"; // search it up
-        imu.initialize(imuParams);
+        imu = hardwareMap.get(IMU.class, "imu");
     }
 
     public RobotDimensions getDimensions() { return dimensions; }
