@@ -8,26 +8,27 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import java.util.List;
 
 /**
- * RobotBase is to be extended by all hardware control classes for any FTC Autonomous or
- * Driver-Controlled purposes
+ * Robot with nothing but a Control Hub. Intended to be extended by all hardware control classes for
+ * any FTC Autonomous or Driver-Controlled purposes.
  */
 public abstract class RobotBase {
     public LinearOpMode opMode;
     public Telemetry telemetry;
     public HardwareMap hardwareMap;
     public IMU imu;
-    public Orientation orientation;
+    public YawPitchRollAngles orientation;
 
     public static class RobotDimensions {
         // INCHES
         public final double ROBOT_LENGTH, ROBOT_WIDTH, ROBOT_HEIGHT;
         // CENTIMETERS
         public final double WHEEL_DIAMETER, WHEEL_CIRCUMFERENCE;
-        // (encoder resolution)
+        // TICKS / ROTATION (use -1 if built-in motor encoders are not used)
         public final double DRIVETRAIN_TICKS;
 
         public RobotDimensions(double robotLength, double robotWidth, double robotHeight, double wheelDiameter, double drivetrainTicks) {

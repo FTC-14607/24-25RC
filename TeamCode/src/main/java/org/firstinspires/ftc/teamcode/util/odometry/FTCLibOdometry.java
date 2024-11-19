@@ -7,22 +7,24 @@ import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 
 public class FTCLibOdometry {
 
-    //HardWare
     private MotorEx encoderLeft, encoderRight, encoderPerp;
-    //Math Variables
-    private double TRACKWIDTH, TICKS_TO_INCHES, CENTER_WHEEL_OFFSET;
 
-    OdometrySubsystem odometry;
+    // ALL IN INCHES
+    private double TRACK_WIDTH;         // distance between encoderRight and encoderLeft
+    private double CENTER_WHEEL_OFFSET; // distance from encoderPerp to center of rotation
+    private double TICKS_TO_INCHES;     // encoder ticks to inches
+
+    private OdometrySubsystem odometry;
 
     public FTCLibOdometry(MotorEx encoderLeft, MotorEx encoderRight, MotorEx encoderPerp,
-                          double TRACKWIDTH, double CENTER_WHEEL_OFFSET, double TICKS_TO_INCHES
+                          double trackWidth, double centerWheelOffset, double ticksToInches
                           ){
         this.encoderLeft = encoderLeft;
         this.encoderRight = encoderRight;
         this.encoderPerp = encoderPerp;
-        this.TRACKWIDTH = TRACKWIDTH;
-        this.TICKS_TO_INCHES = TICKS_TO_INCHES;
-        this.CENTER_WHEEL_OFFSET = CENTER_WHEEL_OFFSET;
+        this.TRACK_WIDTH = trackWidth;
+        this.TICKS_TO_INCHES = ticksToInches;
+        this.CENTER_WHEEL_OFFSET = centerWheelOffset;
     }
 
     public void init(){
@@ -34,7 +36,7 @@ public class FTCLibOdometry {
                 encoderLeft::getDistance,
                 encoderRight::getDistance,
                 encoderPerp::getDistance,
-                TRACKWIDTH, CENTER_WHEEL_OFFSET
+                TRACK_WIDTH, CENTER_WHEEL_OFFSET
         );
 
         odometry = new OdometrySubsystem(holOdom);
@@ -46,8 +48,5 @@ public class FTCLibOdometry {
     public Pose2d getPose(){
         return odometry.getPose();
     }
-
-
-
 
 }

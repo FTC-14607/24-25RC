@@ -2,30 +2,25 @@ package org.firstinspires.ftc.teamcode.robots;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.teamcode.util.odometry.FTCLibOdometry;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+/**
+ * Robot with nothing but four mecanum wheels, and (optional) built-in encoders.
+ * External odometry should be implemented in a child class.
+ */
 
 @Config
 public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
 
     public DcMotorEx frontRight, frontLeft, backRight, backLeft;
     public DcMotorEx[] drivetrain;
+    public double maxDrivePower = 0.85;
 
     public double rotateP = 3.5, rotateI = 0.4, rotateD = 0.2, rotateF = 0.3;
     public PIDFController rotatePIDF;
@@ -51,9 +46,9 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
         super(opModeInstance);
 
         frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
-        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
-        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
-        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+        frontLeft  = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        backRight  = hardwareMap.get(DcMotorEx.class, "backRight");
+        backLeft   = hardwareMap.get(DcMotorEx.class, "backLeft");
         drivetrain = new DcMotorEx[]{frontRight, frontLeft, backRight, backLeft};
 
         frontLeft.setDirection(DcMotorEx.Direction.REVERSE);
@@ -120,30 +115,29 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
                 break;
                 // stop motors after 10 seconds
             else if (startTime > 0 && (System.nanoTime() - startTime > 10000000000L)) {
-                for(DcMotorEx m : drivetrain) m.setVelocity(0);
+                stop();
                 break;
             }
         }
     }
 
     // --------------------------------- MOVEMENT METHODS ------------------------------------------
-
     /**
-     *
-     * @param throttle
-     * @param strafe
-     * @param rotate
-     * @return
+     * Sets all motor powers. (voltage-based, not encoder-based)
+     * @param throttle [-1, 1]
+     * @param strafe   [-1, 1]
+     * @param rotate   [-1, 1]
+     * @return powers motors have been set to
      */
     public double[] drive(double throttle, double strafe, double rotate) {
-        double fRPower = throttle - strafe - rotate;
-        double fLPower = throttle + strafe + rotate;
-        double bRPower = throttle + strafe - rotate;
-        double bLPower = throttle - strafe + rotate;
+        double fRPower = throttle + strafe - rotate;
+        double fLPower = throttle - strafe + rotate;
+        double bRPower = throttle - strafe - rotate;
+        double bLPower = throttle + strafe + rotate;
 
         double[] powers = { fRPower, fLPower, bRPower, bLPower };
 
-        // normalize power to [-1, 1]
+        // normalize power to [-maxDrivePower, maxDrivePower]
         double maxInput = Math.max(
                 Math.abs(fRPower), Math.max(
                 Math.abs(fLPower), Math.max(
@@ -151,9 +145,9 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
                 Math.abs(bLPower)
         )));
 
-        if (maxInput > 1)
+        if (maxInput > maxDrivePower)
             for (int i = 0; i < 4; i++)
-                powers[i] /= maxInput;
+                powers[i] /= maxInput / maxDrivePower;
 
         // set power
         for (int i = 0; i < 4; i++)
@@ -163,16 +157,17 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
         if (true) {
             telemetry.addData("Drive Inputs (t,s,r)",
                     "%5.2f | %5.2f | %5.2f", throttle, strafe, rotate);
-            telemetry.addData("Normalizing Inputs", maxInput > 1);
+            telemetry.addData("Normalizing Inputs", maxInput > maxDrivePower);
             telemetry.addData("Drive Powers (fr,fl,br,bl)",
-                    "%5.2f | %5.2f | %5.2f | %5.2f", fRPower, fLPower, bRPower, bLPower);
+                    "%5.2f | %5.2f | %5.2f | %5.2f", powers[0], powers[1], powers[2], powers[3]);
         }
 
         return powers;
     }
 
+    public void stop() { drive(0,0,0); }
 
-    public void stop() { for (DcMotor m : drivetrain) m.setPower(0); }
+    // ------------------- EVERYTHING BELOW REQUIRES BUILT-IN ENCODERS ------------------------
 
     public void brake() {
         for (DcMotorEx motor : drivetrain) motor.setVelocity(0);
@@ -181,63 +176,44 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
     // all basic movement methods use distance in cm and speed in ticks/sec
     public void forward(double distance, double speed) {
         resetDriveTrainEncoders();
-        int calculatedTicks = distanceToTicks(distance, false);
-        frontRight.setTargetPosition(calculatedTicks);
-        frontLeft.setTargetPosition(calculatedTicks);
-        backRight.setTargetPosition(calculatedTicks);
-        backLeft.setTargetPosition(calculatedTicks);
+        int tickDistance = distanceToTicks(distance, false);
+
         for (DcMotorEx motor : drivetrain) {
+            motor.setTargetPosition(tickDistance);
             motor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             motor.setVelocity(speed);
         }
+
         blockExecutionForRunToPosition(-1);
     }
 
     public void backward(double distance, double speed) {
-        resetDriveTrainEncoders();
-        int calculatedTicks = distanceToTicks(distance, false);
-        frontRight.setTargetPosition(-calculatedTicks);
-        frontLeft.setTargetPosition(-calculatedTicks);
-        backRight.setTargetPosition(-calculatedTicks);
-        backLeft.setTargetPosition(-calculatedTicks);
-        for (DcMotorEx motor : drivetrain) {
-            motor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            motor.setVelocity(speed);
-        }
-        blockExecutionForRunToPosition(-1);
+        forward(-distance, speed);
     }
 
     public void right(double distance, double speed) {
         resetDriveTrainEncoders();
-        int calculatedTicks = distanceToTicks(distance, false);
-        frontRight.setTargetPosition(-calculatedTicks);
-        frontLeft.setTargetPosition(calculatedTicks);
-        backRight.setTargetPosition(calculatedTicks);
-        backLeft.setTargetPosition(-calculatedTicks);
+        int tickDistance = distanceToTicks(distance, false);
+
+        frontRight.setTargetPosition(-tickDistance);
+        frontLeft.setTargetPosition(tickDistance);
+        backRight.setTargetPosition(tickDistance);
+        backLeft.setTargetPosition(-tickDistance);
+
         for (DcMotorEx motor : drivetrain) {
             motor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             motor.setVelocity(speed);
         }
+
         blockExecutionForRunToPosition(System.nanoTime());
     }
 
     public void left(double distance, double speed) {
-        resetDriveTrainEncoders();
-        int calculatedTicks = distanceToTicks(distance, false);
-        frontRight.setTargetPosition(calculatedTicks);
-        frontLeft.setTargetPosition(-calculatedTicks);
-        backRight.setTargetPosition(-calculatedTicks);
-        backLeft.setTargetPosition(calculatedTicks);
-        for (DcMotorEx motor : drivetrain) {
-            motor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            motor.setVelocity(speed);
-        }
-        blockExecutionForRunToPosition(System.nanoTime());
+        right(-distance, speed);
     }
 
     /**
      * forward but uses separate external pid for each motor and has angle correction
-     * @param distance
      */
     public void forwardExp(double distance) {
         resetDriveTrainEncoders();
@@ -246,18 +222,14 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
             pid.reset();
             pid.setSetPoint(tickDistance);
         }
-        orientation = imu.getRobotOrientation()
-        myRobotOrientation = imu.getRobotOrientation(
-                AxesReference.INTRINSIC,
-                AxesOrder.XYZ,
-                AngleUnit.DEGREES
-        );
-        double firstHeading = imu.getRobotOrientation().firstAngle;
+        orientation = imu.getRobotYawPitchRollAngles();
+        double firstHeading = orientation.getYaw(AngleUnit.DEGREES);
         boolean flip = firstHeading < -90 || firstHeading > 90;
         headKeepPIDF.setSetPoint(flip && firstHeading<0 ? -firstHeading:firstHeading);
         do {
             //float angleCorrection = 0;
-            float heading = imu.getRobotOrientation().firstAngle;
+            orientation = imu.getRobotYawPitchRollAngles();
+            double heading = orientation.getYaw(AngleUnit.DEGREES);
             // account for the fact that the angle goes 179, 180, then -180, -179
             double angleCorrection = headKeepPIDF.calculate(heading + (flip && heading<0 ? 360:0));
             frontRight.setVelocity(FRPIDF.calculate(frontRight.getCurrentPosition()) + angleCorrection);
@@ -273,7 +245,6 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
 
     /**
      * Experimental strafe that uses imu to maintain orientation
-     * @param distance (cm) positive is right, negative is left
      */
     public void strafeExp(double distance) {
         resetDriveTrainEncoders();
@@ -283,12 +254,14 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
         FLStrafePID.setSetPoint(tickDistance);
         BRStrafePID.setSetPoint(tickDistance); //br
         BLStrafePID.setSetPoint(-tickDistance);
-        double firstHeading = imu.getRobotOrientation().firstAngle;
+        orientation = imu.getRobotYawPitchRollAngles();
+        double firstHeading = orientation.getYaw(AngleUnit.DEGREES);
         boolean flip = firstHeading < -90 || firstHeading > 90;
         headKeepPIDF.setSetPoint(flip && firstHeading<0 ? -firstHeading:firstHeading);
         do {
             float angleCorrection = 0;
-            float heading = imu.getRobotOrientation().firstAngle;
+            orientation = imu.getRobotYawPitchRollAngles();
+            double heading = orientation.getYaw(AngleUnit.DEGREES);
             // account for the fact that the angle goes 179, 180, then -180, -179
             //float angleCorrection = headingPIDFController.calculate(heading + (flip && heading<0 ? 360:0));
             frontRight.setVelocity(FRStrafePID.calculate(frontRight.getCurrentPosition()) + angleCorrection);
@@ -309,14 +282,16 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
      */
     public void rotate(double degrees) {
         double motorSpeed = 0;
-        float lastAngle = -imu.getRobotOrientation().firstAngle;
+        orientation = imu.getRobotYawPitchRollAngles();
+        double lastAngle = -orientation.getYaw(AngleUnit.DEGREES);
         degrees += lastAngle;
         boolean flip = degrees > 179 || degrees < -179;
         boolean sign = lastAngle >= 0; // true if angle positive, false if negative
         rotatePIDF.reset();
         rotatePIDF.setSetPoint(degrees);
         do {
-            lastAngle = -imu.getRobotOrientation().firstAngle;
+            orientation = imu.getRobotYawPitchRollAngles();
+            lastAngle = -orientation.getYaw(AngleUnit.DEGREES);
             if (flip) {
                 // if angle was originally positive but the current angle is negative
                 // add 360 to flip the sign

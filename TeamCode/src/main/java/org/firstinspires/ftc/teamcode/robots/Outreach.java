@@ -1,72 +1,136 @@
 package org.firstinspires.ftc.teamcode.robots;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
-import com.arcrobotics.ftclib.kinematics.Odometry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.util.odometry.FTCLibOdometry;
 
-
+@Config
 public class Outreach extends MecanumDrive {
 
-    MotorEx odoRight;
-    MotorEx odoLeft;
-    MotorEx odoMiddle;
+    // actuators and sensors
+    public DcMotorEx vertSlideRight;
+    public DcMotorEx vertSlideLeft;
+    public Servo horiSlideRight; // axon servos
+    public Servo horiSlideLeft;
+    public MotorEx odoRight;
+    public MotorEx odoLeft;
+    public MotorEx odoPerp;
     public FTCLibOdometry odo;
 
-    public static double TRACK_WIDTH = 8.72; // 20.15 cm, dist between right and left odo
-    public static double CENTER_WHEEL_OFFSET = 0; // cm
-    // GoBilda Odometry Pod; 2000 ticks/rev, 48 mm diameter
-    public static double TICKS_TO_INCHES = 3.14159 * (4.8 / 2.54) / 2000;
+    // controllers
+    public static double tP = 0.03, tI = 0.1, tD = 0, tF = 0;
+    public static double sP = 0, sI = 0, sD = 0, sF = 0;
+    public static double rP = 0, rI = 0, rD = 0, rF = 0;
+    public PIDFController throttleController;
+    public PIDFController strafeController;
+    public PIDFController rotateController;
+    public ElapsedTime holdTimer = new ElapsedTime();
 
+    // telemetry
+    public static Pose2d currentPose;
+
+    // physical constants
+    public final static RobotDimensions DIMENSIONS = new RobotDimensions(
+            18, 18, 18, 9.6, 537.68984
+    );
+    public final static double TRACK_WIDTH = 8.72;        // 20.15 cm
+    public final static double CENTER_WHEEL_OFFSET = 0;   // 0 cm
+    // GoBilda Odometry Pod; 2000 ticks/rev, 48 mm diameter; somehow pods are reversed so * -1
+    public final static double TICKS_TO_INCHES = 3.14159 * (4.8 / 2.54) / 2000 * -1;
 
     public Outreach(LinearOpMode opmode){
         super(opmode);
-        // Drivetrain Motors: goBilda 5203 Series Yellow Jacket Planetary Gear Motor, 312 RPM
-        dimensions = new RobotDimensions(-1, -1, -1, 4.8, 2000);
 
-        // ODOMETRY
-        odoRight = new MotorEx(hardwareMap, "frontLeft");
-        odoLeft = new MotorEx(hardwareMap, "backRight");
-        odoMiddle = new MotorEx(hardwareMap, "frontRight");
+        dimensions = DIMENSIONS;
+        odoRight = new MotorEx(hardwareMap, "frontLeft"); // encoders are plugged in next to motors
+        odoLeft =  new MotorEx(hardwareMap, "backRight");
+        odoPerp =  new MotorEx(hardwareMap, "frontRight");
+        odo = new FTCLibOdometry(odoLeft, odoRight, odoPerp, TRACK_WIDTH, CENTER_WHEEL_OFFSET, TICKS_TO_INCHES);
+        odo.init();
 
-        odo = new FTCLibOdometry(odoLeft, odoRight, odoMiddle, TRACK_WIDTH, CENTER_WHEEL_OFFSET, TICKS_TO_INCHES);
+        imu.resetYaw();
 
+        throttleController = new PIDFController(tP, tI, tD, tF);
+        strafeController   = new PIDFController(sP, sI, sD, sF);
+        rotateController   = new PIDFController(rP, rI, rD, rF);
+
+        throttleController.setTolerance(0.1); // inches
+        strafeController  .setTolerance(0.5); // inches
+        rotateController  .setTolerance(5);   // degrees
     }
 
-    public void forwardOdo(double distance) {
-
-        PIDFController pid = new PIDFController(0.05, 0, 0, 0);
-        pid.setTolerance(0.1);
-
+    public void updatePose() {
         odo.update();
-        double firstPos = odo.getPose().getY();
-
-        pid.reset();
-        pid.setSetPoint(distance);
-
-        do {
-            odo.update();
-            double pos = odo.getPose().getX();
-            double power = Range.clip(pid.calculate(pos - firstPos), -1, 1);
-
-            frontRight.setPower(power);
-            frontLeft.setPower(power);
-            backRight.setPower(power);
-            backLeft.setPower(power);
-
-        } while (opMode.opModeIsActive() && !opMode.isStopRequested() && !pid.atSetPoint());
-
-        stop();
-
+        currentPose = odo.getPose();
     }
 
-    // ------------------------------------ INTERACTOR METHODS -------------------------------------
+    public void updateOrientation() {
+        orientation = imu.getRobotYawPitchRollAngles();
+    }
 
+    public void forward(double distance, double holdTime) {
+        move(distance, 0, 0, holdTime);
+    }
+
+    public void strafe(double distance, double holdTime) {
+        move(0, distance, 0, holdTime);
+    }
+
+    public void rotate(double angle, double holdTime) {
+        move(0, 0, angle, holdTime);
+    }
+
+    public void move(double straightDistance, double strafeDistance, double rotateAngle, double holdTime) { // inches
+        // read starting values
+        updatePose();
+        Pose2d firstPose = currentPose;
+
+        // set controller setpoints
+        throttleController.reset();
+        strafeController  .reset();
+        rotateController  .reset();
+
+        throttleController.setSetPoint(straightDistance);
+        strafeController  .setSetPoint(strafeDistance);
+        rotateController  .setSetPoint(rotateAngle);
+
+        while(opMode.opModeIsActive() && !opMode.isStopRequested()) {
+            updatePose();
+
+            double throttlePower = throttleController.calculate(currentPose.getX() - firstPose.getX());
+            double strafePower   = strafeController  .calculate(currentPose.getY() - firstPose.getY());
+            double rotatePower   = rotateController  .calculate(currentPose.getHeading() - firstPose.getHeading());
+
+            drive(throttlePower, strafePower, rotatePower);
+
+            // break loop if target is reached and it has been held long enough
+            if (
+                throttleController.atSetPoint() &&
+                strafeController  .atSetPoint() &&
+                rotateController  .atSetPoint()
+            ) {
+                telemetry.addLine("Holding...");
+                stop();
+                if (holdTimer.time() > holdTime)
+                    break;
+            } else
+                holdTimer.reset();
+
+            telemetry.addData("Now Pose", currentPose);
+            telemetry.addData("First Pose", firstPose);
+            telemetry.addData("Set Point", throttleController.getSetPoint());
+            telemetry.addData("Current Point", currentPose.getX());
+            telemetry.update();
+        }
+
+    }
 
 }
