@@ -51,7 +51,7 @@ public class MainTele extends LinearOpMode {
                 robot.maxDrivePower = 0.5;
             else if (gamepad1.y)
                 robot.maxDrivePower = 0.7;
-            else if (gamepad1.y)
+            else if (gamepad1.x)
                 robot.maxDrivePower = 0.9;
 
             moveDriveTrain(gamepad1);
@@ -63,7 +63,7 @@ public class MainTele extends LinearOpMode {
     }
 
     public void moveDriveTrain(Gamepad gamepad) {
-        double throttle = gamepad.left_stick_y;
+        double throttle = gamepad.left_stick_y * -1;
         double strafe   = gamepad.left_stick_x;
         double rotate   = gamepad.right_stick_x;
 

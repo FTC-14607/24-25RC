@@ -7,8 +7,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 
 /**
  * Robot with nothing but four mecanum wheels, and (optional) built-in encoders.
@@ -90,8 +88,14 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
      * @param motors drivetrain or slides
      * @param mode DcMotorEx.RunMode
      */
-    public void setRunMode(DcMotorEx[] motors, DcMotorEx.RunMode mode) {
-        for (DcMotorEx motor : motors) motor.setMode(mode);
+    public void setRunMode(DcMotor[] motors, DcMotor.RunMode mode) {
+        for (DcMotor motor : motors)
+            motor.setMode(mode);
+    }
+
+    public void setZeroPowerBehavior(DcMotor[] motors, DcMotor.ZeroPowerBehavior behavior) {
+        for (DcMotor motor : motors)
+            motor.setZeroPowerBehavior(behavior);
     }
 
     /**
@@ -115,7 +119,7 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
                 break;
                 // stop motors after 10 seconds
             else if (startTime > 0 && (System.nanoTime() - startTime > 10000000000L)) {
-                stop();
+                brake();
                 break;
             }
         }
@@ -130,10 +134,10 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
      * @return powers motors have been set to
      */
     public double[] drive(double throttle, double strafe, double rotate) {
-        double fRPower = throttle + strafe - rotate;
-        double fLPower = throttle - strafe + rotate;
-        double bRPower = throttle - strafe - rotate;
-        double bLPower = throttle + strafe + rotate;
+        double fRPower = throttle - strafe - rotate;
+        double fLPower = throttle + strafe + rotate;
+        double bRPower = throttle + strafe - rotate;
+        double bLPower = throttle - strafe + rotate;
 
         double[] powers = { fRPower, fLPower, bRPower, bLPower };
 
@@ -165,13 +169,12 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
         return powers;
     }
 
-    public void stop() { drive(0,0,0); }
+    public void brake() {
+        setZeroPowerBehavior(drivetrain, DcMotor.ZeroPowerBehavior.BRAKE);
+        drive(0,0,0);
+    }
 
     // ------------------- EVERYTHING BELOW REQUIRES BUILT-IN ENCODERS ------------------------
-
-    public void brake() {
-        for (DcMotorEx motor : drivetrain) motor.setVelocity(0);
-    }
 
     // all basic movement methods use distance in cm and speed in ticks/sec
     public void forward(double distance, double speed) {

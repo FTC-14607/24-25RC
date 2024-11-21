@@ -14,6 +14,7 @@ public class FTCLibOdometry {
     private double CENTER_WHEEL_OFFSET; // distance from encoderPerp to center of rotation
     private double TICKS_TO_INCHES;     // encoder ticks to inches
 
+    private HolonomicOdometry holOdom;
     private OdometrySubsystem odometry;
 
     public FTCLibOdometry(MotorEx encoderLeft, MotorEx encoderRight, MotorEx encoderPerp,
@@ -32,7 +33,7 @@ public class FTCLibOdometry {
         encoderRight.setDistancePerPulse(TICKS_TO_INCHES);
         encoderPerp.setDistancePerPulse(TICKS_TO_INCHES);
 
-        HolonomicOdometry holOdom = new HolonomicOdometry(
+        holOdom = new HolonomicOdometry(
                 encoderLeft::getDistance,
                 encoderRight::getDistance,
                 encoderPerp::getDistance,
@@ -42,6 +43,9 @@ public class FTCLibOdometry {
         odometry = new OdometrySubsystem(holOdom);
     }
 
+    public void reset() {
+        this.init();
+    }
     public void update(){
         odometry.update();
     }
