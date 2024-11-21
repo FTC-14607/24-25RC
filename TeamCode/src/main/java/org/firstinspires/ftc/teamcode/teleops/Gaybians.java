@@ -41,6 +41,18 @@ public class Gaybians extends LinearOpMode {
      * @return driveTrainPowers, an array of all the powers the drivetrain is set to (FL, BL, FR, BR)
      */
     public float[] moveDriveTrain(@NonNull Gamepad gamepad, @Nonnegative float speedFactor) {
+
+//        // Find the maximum speed value
+//        double max = Math.abs(speeds[0]);
+//        for (int i = 0; i < speeds.length; i++) {
+//            if (max < Math.abs(speeds[i])) max = Math.abs(speeds[i]);
+//        }
+//
+//
+//        // Normalize the speeds if necessary
+//        if (max > 1) {
+//            for (int i = 0; i < speeds.length; i++) speeds[i] /= max;
+//        }
         //control.drivetrain represents all 4 wheels below?
         //control.frontLEft, backLeft, frontRight, backRight ... represent
         float FBInput = gamepad.left_stick_y; //either input is analog of digital based on which piece of gamepad is pressed

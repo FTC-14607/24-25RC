@@ -7,6 +7,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.teamcode.util.odometry.FTCLibOdometry;
 
 /**
  * Robot with nothing but four mecanum wheels, and (optional) built-in encoders.
@@ -111,7 +116,7 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
 
     /**
      * Pauses op mode and interactors while drivetrain motors are running using RUN_TO_POSITION
-     * @param startTime Pass System.nanoTime() or opmode.time here, or -1 if you dont want to break after 10s
+     * @param startTime Pass System.nanoTime() or opmode.time here, or -1 if you don't want to break after 10s
      */
     public void blockExecutionForRunToPosition(long startTime) {
         while (opMode.opModeIsActive() && !opMode.isStopRequested()) {
@@ -233,6 +238,7 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
             //float angleCorrection = 0;
             orientation = imu.getRobotYawPitchRollAngles();
             double heading = orientation.getYaw(AngleUnit.DEGREES);
+
             // account for the fact that the angle goes 179, 180, then -180, -179
             double angleCorrection = headKeepPIDF.calculate(heading + (flip && heading<0 ? 360:0));
             frontRight.setVelocity(FRPIDF.calculate(frontRight.getCurrentPosition()) + angleCorrection);
@@ -257,16 +263,20 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
         FLStrafePID.setSetPoint(tickDistance);
         BRStrafePID.setSetPoint(tickDistance); //br
         BLStrafePID.setSetPoint(-tickDistance);
+
         orientation = imu.getRobotYawPitchRollAngles();
         double firstHeading = orientation.getYaw(AngleUnit.DEGREES);
+
         boolean flip = firstHeading < -90 || firstHeading > 90;
         headKeepPIDF.setSetPoint(flip && firstHeading<0 ? -firstHeading:firstHeading);
         do {
-            float angleCorrection = 0;
+            double angleCorrection = 0;
+
             orientation = imu.getRobotYawPitchRollAngles();
             double heading = orientation.getYaw(AngleUnit.DEGREES);
+
             // account for the fact that the angle goes 179, 180, then -180, -179
-            //float angleCorrection = headingPIDFController.calculate(heading + (flip && heading<0 ? 360:0));
+//            angleCorrection = headKeepPIDF.calculate(heading + (flip && heading<0 ? 360:0));
             frontRight.setVelocity(FRStrafePID.calculate(frontRight.getCurrentPosition()) + angleCorrection);
             frontLeft.setVelocity(FLStrafePID.calculate(frontLeft.getCurrentPosition()) - angleCorrection);
             backRight.setVelocity(BRStrafePID.calculate(backRight.getCurrentPosition()) + angleCorrection);
@@ -284,9 +294,11 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
      * @param degrees angle to rotate to in degrees, SHOULD BE BETWEEN -180 AND 180
      */
     public void rotate(double degrees) {
-        double motorSpeed = 0;
+        double motorSpeed;
+
         orientation = imu.getRobotYawPitchRollAngles();
         double lastAngle = -orientation.getYaw(AngleUnit.DEGREES);
+
         degrees += lastAngle;
         boolean flip = degrees > 179 || degrees < -179;
         boolean sign = lastAngle >= 0; // true if angle positive, false if negative
@@ -295,6 +307,7 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
         do {
             orientation = imu.getRobotYawPitchRollAngles();
             lastAngle = -orientation.getYaw(AngleUnit.DEGREES);
+
             if (flip) {
                 // if angle was originally positive but the current angle is negative
                 // add 360 to flip the sign

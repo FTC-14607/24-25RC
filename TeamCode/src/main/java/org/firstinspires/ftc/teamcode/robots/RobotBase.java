@@ -13,8 +13,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import java.util.List;
 
 /**
+<<<<<<< Updated upstream
  * Robot with nothing but a Control Hub. Intended to be extended by all hardware control classes for
  * any FTC Autonomous or Driver-Controlled purposes.
+=======
+ * RobotBase is to be extended by all hardware control classes for any FTC Autonomous or
+ * Driver-Controlled purposes. Relies only on components in a Control Hub and variables
+ * in an OpMode.
+>>>>>>> Stashed changes
  */
 public abstract class RobotBase {
     public LinearOpMode opMode;
@@ -22,6 +28,7 @@ public abstract class RobotBase {
     public HardwareMap hardwareMap;
     public IMU imu;
     public YawPitchRollAngles orientation;
+//    public BNO055IMU imu;
 
     public static class RobotDimensions {
         // INCHES
