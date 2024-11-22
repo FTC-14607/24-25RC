@@ -68,9 +68,9 @@ public class CardboardOne extends MecanumDrive {
     public static int VERT_SLIDES_TOP = 100;
     public static double VERT_SLIDES_DEFAULT_SPEED = 100;
     public static double VERT_SLIDES_INCHES_TO_TICKS = -1;
-    public static double UPPER_ARM_BOTTOM = 0.47; // servo position [0, 1]
-    public static double UPPER_ARM_TOP = 1;
-    public static double DUMPER_INTAKE = 0;
+    public static double UPPER_ARM_LOWERED = 0.47; // servo position [0, 1]
+    public static double UPPER_ARM_RAISED = 1;
+    public static double DUMPER_DOWN = 0;
     public static double DUMPER_TOP = 1;
     public static double DUMPER_DUMP = 0.5;
 
@@ -167,16 +167,16 @@ public class CardboardOne extends MecanumDrive {
     public double getSpecimenClawPos()     { return clawSpecimen   .getPosition(); }
 
     // TODO: maybe use Range.scale
-    public void setDumperPos          (double pos) { dumper         .setPosition(Range.clip(pos, DUMPER_INTAKE,        DUMPER_TOP        )); }
+    public void setDumperPos          (double pos) { dumper         .setPosition(Range.clip(pos, DUMPER_DOWN,        DUMPER_TOP        )); }
     public void setSampleClawPos      (double pos) { clawSample     .setPosition(Range.clip(pos, SAMPLE_CLAW_CLOSED,   SAMPLE_CLAW_OPEN  )); }
     public void setSampleClawYawPos   (double pos) { clawSampleYaw  .setPosition(Range.clip(pos, SAMPLE_CLAW_VERTICAL,SAMPLE_CLAW_VERTICAL_FLIPPED)); }
     public void setSampleClawPitchPos (double pos) { clawSamplePitch.setPosition(Range.clip(pos, SAMPLE_CLAW_DOWN,     SAMPLE_CLAW_UP    )); }
     public void setSpecimenClawPos    (double pos) { clawSpecimen   .setPosition(Range.clip(pos, SPECIMEN_CLAW_OPEN, SPECIMEN_CLAW_CLOSED)); }
 
-    public void raiseArm()                { setUpperArmPos(         UPPER_ARM_TOP         ); }
-    public void lowerArm()                { setUpperArmPos(         UPPER_ARM_BOTTOM      ); }
+    public void raiseArm()                { setUpperArmPos(UPPER_ARM_RAISED); }
+    public void lowerArm()                { setUpperArmPos(UPPER_ARM_LOWERED); }
     public void dumpDumper()              { setDumperPos(           DUMPER_DUMP           ); }
-    public void resetDumper()             { setDumperPos(           DUMPER_INTAKE         ); }
+    public void resetDumper()             { setDumperPos(DUMPER_DOWN); }
     public void extendHorizontalSlides()  { setHorizontalSlidesPos( HORI_SLIDES_EXTENDED  ); }
     public void retractHorizontalSlides() { setHorizontalSlidesPos( HORI_SLIDES_RETRACTED ); }
     public void closeSampleClaw()         { setSampleClawPos(       SAMPLE_CLAW_CLOSED    ); }
@@ -192,6 +192,7 @@ public class CardboardOne extends MecanumDrive {
         pos = Range.clip(pos, HORI_SLIDES_EXTENDED, HORI_SLIDES_RETRACTED);
         for (Servo slide : horiSlides)
             slide.setPosition(pos);
+        // TODO: add camera for auto pickup
     }
 
     public int getVerticalSlidePos() {
@@ -240,7 +241,7 @@ public class CardboardOne extends MecanumDrive {
      * @param setPos [0-1]
      */
     public void setUpperArmPos(double setPos) { // needs to keep dumper level while raising arm
-        setPos = Range.clip(setPos, UPPER_ARM_BOTTOM, UPPER_ARM_TOP);
+        setPos = Range.clip(setPos, UPPER_ARM_LOWERED, UPPER_ARM_RAISED);
 
         double currentPos = getUpperArmPos();
         double dumperPos = getDumperPos();

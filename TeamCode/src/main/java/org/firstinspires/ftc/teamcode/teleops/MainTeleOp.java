@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.robots.CardboardOne;
 
@@ -30,12 +31,40 @@ public class MainTeleOp extends LinearOpMode {
         robot = new CardboardOne(this);
         robot.maxDrivePower = 0.9;
 
+        double horizontalSlidePos = CardboardOne.HORI_SLIDES_RETRACTED;
+        double verticalSlidePos = CardboardOne.VERT_SLIDES_BOTTOM;
+
 //        robot.closeSampleClaw();
 //        robot.raiseSampleClaw();
 
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
+
+            // intake
+            if (gamepad1.right_bumper || gamepad2.right_bumper) {
+                robot.closeSampleClaw();
+            } else if (gamepad1.left_bumper || gamepad2.left_bumper) {
+                robot.openSampleClaw();
+            }
+
+            // outtake
+            if (gamepad2.a) {
+                robot.dumpDumper();
+                sleep(10);
+                robot.resetDumper();
+            }
+
+            // horizontal slides
+            if (gamepad2.dpad_right) {
+                horizontalSlidePos += 0.005;
+            } else if (gamepad2.dpad_left) {
+                horizontalSlidePos -= 0.005;
+            }
+            horizontalSlidePos = Range.clip(horizontalSlidePos, CardboardOne.HORI_SLIDES_EXTENDED, CardboardOne.HORI_SLIDES_RETRACTED);
+            robot.setHorizontalSlidesPos(horizontalSlidePos);
+
+            //
 
             if (gamepad2.a) {
                 if (gamepad2.right_bumper) robot.extendHorizontalSlides();
@@ -65,6 +94,8 @@ public class MainTeleOp extends LinearOpMode {
     }
 
     public void moveDriveTrain(Gamepad gamepad) {
+
+        // TODO: field centric
 
         // change max drive power
         if      (gamepad.a) robot.maxDrivePower = 0.3;
