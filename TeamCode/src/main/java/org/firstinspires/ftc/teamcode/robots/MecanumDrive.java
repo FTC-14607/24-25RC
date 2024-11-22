@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robots;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -89,21 +91,6 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
     public void resetDriveTrainEncoders() { setRunMode(drivetrain, DcMotor.RunMode.STOP_AND_RESET_ENCODER);}
 
     /**
-     * Sets all the motors in motors[] to the passed run mode
-     * @param motors drivetrain or slides
-     * @param mode DcMotorEx.RunMode
-     */
-    public void setRunMode(DcMotor[] motors, DcMotor.RunMode mode) {
-        for (DcMotor motor : motors)
-            motor.setMode(mode);
-    }
-
-    public void setZeroPowerBehavior(DcMotor[] motors, DcMotor.ZeroPowerBehavior behavior) {
-        for (DcMotor motor : motors)
-            motor.setZeroPowerBehavior(behavior);
-    }
-
-    /**
      * Converts a distance (IN CENTIMETERS) on the field to a number of ticks for the motor to rotate about
      * @param distance (centimeters)
      * @return Ticks for the drivetrain motors to turn
@@ -133,9 +120,9 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
     // --------------------------------- MOVEMENT METHODS ------------------------------------------
     /**
      * Sets all motor powers. (voltage-based, not encoder-based)
-     * @param throttle [-1, 1]
-     * @param strafe   [-1, 1]
-     * @param rotate   [-1, 1]
+     * @param throttle [-1, 1] power with which to straight forward and back
+     * @param strafe   [-1, 1] power with which to strafe right and left
+     * @param rotate   [-1, 1] power with which to rotate clockwise and counterclockwise
      * @return powers motors have been set to
      */
     public double[] drive(double throttle, double strafe, double rotate) {
@@ -146,7 +133,10 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
 
         double[] powers = { fRPower, fLPower, bRPower, bLPower };
 
-        // normalize power to [-maxDrivePower, maxDrivePower]
+        // normalize power to [-maxDrivePower, maxDrivePower] if it exceeds it
+        // TODO: scale power for voltage (linear relationship, may want to read only once during init): controlHubVoltageSensor.getVoltage();
+        // maybe also use motor.isMotorOverCurrent(); (test if either of these affect loop speed)
+
         double maxInput = Math.max(
                 Math.abs(fRPower), Math.max(
                 Math.abs(fLPower), Math.max(
@@ -156,14 +146,14 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
 
         if (maxInput > maxDrivePower)
             for (int i = 0; i < 4; i++)
-                powers[i] /= maxInput / maxDrivePower;
+                powers[i] /= ( maxInput / maxDrivePower );
 
         // set power
         for (int i = 0; i < 4; i++)
             drivetrain[i].setPower(powers[i]);
 
         // telemetry
-        if (true) {
+        if (showTelemetry) {
             telemetry.addData("Drive Inputs (t,s,r)",
                     "%5.2f | %5.2f | %5.2f", throttle, strafe, rotate);
             telemetry.addData("Normalizing Inputs", maxInput > maxDrivePower);

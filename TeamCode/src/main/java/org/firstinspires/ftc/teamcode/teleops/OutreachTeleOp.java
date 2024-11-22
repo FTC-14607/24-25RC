@@ -8,12 +8,12 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.Arrays;
 
-import org.firstinspires.ftc.teamcode.robots.Thonk;
+import org.firstinspires.ftc.teamcode.robots.Outreach;
 
-@TeleOp(name = "Main Linear TeleOp", group = "Main")
-public class MainTele extends LinearOpMode {
+@TeleOp(name = "Outreach TeleOp", group = "Main")
+public class OutreachTeleOp extends LinearOpMode {
 
-    Thonk robot;
+    Outreach robot;
     ElapsedTime loopTimer = new ElapsedTime();
 
     public enum ArmState {
@@ -26,7 +26,7 @@ public class MainTele extends LinearOpMode {
     public static final double STRAIGHT_CORRECTION = 0.0;
 
     public void runOpMode() {
-        robot = new Thonk(this);
+        robot = new Outreach(this);
         robot.maxDrivePower = 0.9;
 
         waitForStart();

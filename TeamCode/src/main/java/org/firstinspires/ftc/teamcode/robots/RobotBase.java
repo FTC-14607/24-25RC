@@ -3,8 +3,11 @@ package org.firstinspires.ftc.teamcode.robots;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -13,22 +16,21 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import java.util.List;
 
 /**
-<<<<<<< Updated upstream
  * Robot with nothing but a Control Hub. Intended to be extended by all hardware control classes for
  * any FTC Autonomous or Driver-Controlled purposes.
-=======
- * RobotBase is to be extended by all hardware control classes for any FTC Autonomous or
- * Driver-Controlled purposes. Relies only on components in a Control Hub and variables
- * in an OpMode.
->>>>>>> Stashed changes
  */
 public abstract class RobotBase {
     public LinearOpMode opMode;
     public Telemetry telemetry;
     public HardwareMap hardwareMap;
+    public VoltageSensor controlHubVoltageSensor;
     public IMU imu;
+
+    public double controlHubVoltage;
     public YawPitchRollAngles orientation;
 //    public BNO055IMU imu;
+
+    public boolean showTelemetry = true;
 
     public static class RobotDimensions {
         // INCHES
@@ -60,10 +62,32 @@ public abstract class RobotBase {
         for(LynxModule hub : hubs)
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
 
-        //imu
+        // sensors
+        controlHubVoltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
         imu = hardwareMap.get(IMU.class, "imu");
+
+        controlHubVoltage = controlHubVoltageSensor.getVoltage();
     }
 
     public RobotDimensions getDimensions() { return dimensions; }
 
+    /**
+     * Sets all the motors in motors[] to the passed run mode
+     * @param motors drivetrain or slides
+     * @param mode DcMotorEx.RunMode
+     */
+    public void setRunMode(DcMotor[] motors, DcMotor.RunMode mode) {
+        for (DcMotor motor : motors)
+            motor.setMode(mode);
+    }
+
+    public void setZeroPowerBehavior(DcMotor[] motors, DcMotor.ZeroPowerBehavior behavior) {
+        for (DcMotor motor : motors)
+            motor.setZeroPowerBehavior(behavior);
+    }
+
+    public void setDirection(DcMotor[] motors, DcMotorSimple.Direction direction) {
+        for (DcMotor motor : motors)
+            motor.setDirection(direction);
+    }
 }
