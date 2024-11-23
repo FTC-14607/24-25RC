@@ -32,7 +32,7 @@ public class MainTeleOp extends LinearOpMode {
         robot.maxDrivePower = 0.9;
 
         double horizontalSlidePos = CardboardOne.HORI_SLIDES_RETRACTED;
-        double verticalSlidePos = CardboardOne.VERT_SLIDES_BOTTOM;
+        int verticalSlidePos = CardboardOne.VERT_SLIDES_BOTTOM;
 
 //        robot.closeSampleClaw();
 //        robot.raiseSampleClaw();
@@ -75,6 +75,14 @@ public class MainTeleOp extends LinearOpMode {
                 if (gamepad2.right_bumper) robot.raiseArm();
                 else if (gamepad2.left_bumper) robot.lowerArm();
             }
+
+            if (gamepad2.right_trigger > 0) verticalSlidePos += 10;
+            else if (gamepad2.left_trigger > 0) verticalSlidePos -= 10;
+
+            if (gamepad2.x) robot.closeSpecimenClaw();
+            else if (gamepad2.y) robot.openSpecimenClaw();
+
+            robot.setVerticalSlidesPos(verticalSlidePos);
 
             moveDriveTrain(gamepad1);
 

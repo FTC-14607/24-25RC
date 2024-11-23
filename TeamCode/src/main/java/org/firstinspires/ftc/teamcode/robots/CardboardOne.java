@@ -65,11 +65,11 @@ public class CardboardOne extends MecanumDrive {
     public static double ODO_TICKS_TO_INCHES = 3.14159 * (4.8 / 2.54) / 2000 * -1;
 
     public static int VERT_SLIDES_BOTTOM = 0; // ticks
-    public static int VERT_SLIDES_TOP = 100;
+    public static int VERT_SLIDES_TOP = 4600;
     public static double VERT_SLIDES_DEFAULT_SPEED = 100;
     public static double VERT_SLIDES_INCHES_TO_TICKS = -1;
-    public static double UPPER_ARM_LOWERED = 0.47; // servo position [0, 1]
-    public static double UPPER_ARM_RAISED = 1;
+    public static double UPPER_ARM_LOWERED = 0.8; // servo position [0, 1]
+    public static double UPPER_ARM_RAISED = 0;
     public static double DUMPER_DOWN = 0;
     public static double DUMPER_TOP = 1;
     public static double DUMPER_DUMP = 0.5;
@@ -82,7 +82,7 @@ public class CardboardOne extends MecanumDrive {
     public static double SAMPLE_CLAW_VERTICAL = 0.14;
     public static double SAMPLE_CLAW_VERTICAL_FLIPPED = 0.78;
     public static double SAMPLE_CLAW_DOWN = 0;
-    public static double SAMPLE_CLAW_UP = 0.55;
+    public static double SAMPLE_CLAW_UP = 1;
 
     public static double SPECIMEN_CLAW_CLOSED = 0.1;
     public static double SPECIMEN_CLAW_OPEN = 0;
@@ -114,14 +114,13 @@ public class CardboardOne extends MecanumDrive {
         // setup hardware
         dumper.setDirection(Servo.Direction.REVERSE); // dumper servo is on opposite side of arm servo
 
-        vertSlideRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        vertSlideLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         vertSlides = new DcMotorEx[] { vertSlideRight, vertSlideLeft };
         horiSlideRight.setDirection(Servo.Direction.REVERSE);
         horiSlides = new Servo[] { horiSlideRight, horiSlideLeft };
 
         setZeroPowerBehavior(vertSlides, DcMotor.ZeroPowerBehavior.BRAKE); // TODO: experiment with this
 //        setRunMode(vertSlides, DcMotor.RunMode.RUN_TO_POSITION);
-        setDirection(vertSlides, DcMotorSimple.Direction.FORWARD);
 
 //        odo = new FTCLibOdometry(odoLeft, odoRight, odoPerp, TRACK_WIDTH, CENTER_WHEEL_OFFSET, ODO_TICKS_TO_INCHES);
 //        odo.init();
@@ -167,14 +166,15 @@ public class CardboardOne extends MecanumDrive {
     public double getSpecimenClawPos()     { return clawSpecimen   .getPosition(); }
 
     // TODO: maybe use Range.scale
+    public void setUpperArmPos        (double pos) { upperArm       .setPosition(Range.clip(pos, UPPER_ARM_RAISED, UPPER_ARM_LOWERED)); }
     public void setDumperPos          (double pos) { dumper         .setPosition(Range.clip(pos, DUMPER_DOWN,        DUMPER_TOP        )); }
     public void setSampleClawPos      (double pos) { clawSample     .setPosition(Range.clip(pos, SAMPLE_CLAW_CLOSED,   SAMPLE_CLAW_OPEN  )); }
     public void setSampleClawYawPos   (double pos) { clawSampleYaw  .setPosition(Range.clip(pos, SAMPLE_CLAW_VERTICAL,SAMPLE_CLAW_VERTICAL_FLIPPED)); }
     public void setSampleClawPitchPos (double pos) { clawSamplePitch.setPosition(Range.clip(pos, SAMPLE_CLAW_DOWN,     SAMPLE_CLAW_UP    )); }
     public void setSpecimenClawPos    (double pos) { clawSpecimen   .setPosition(Range.clip(pos, SPECIMEN_CLAW_OPEN, SPECIMEN_CLAW_CLOSED)); }
 
-    public void raiseArm()                { setUpperArmPos(UPPER_ARM_RAISED); }
-    public void lowerArm()                { setUpperArmPos(UPPER_ARM_LOWERED); }
+    public void raiseArm()                { setUpperArmAndDumperPos(UPPER_ARM_RAISED); }
+    public void lowerArm()                { setUpperArmAndDumperPos(UPPER_ARM_LOWERED); }
     public void dumpDumper()              { setDumperPos(           DUMPER_DUMP           ); }
     public void resetDumper()             { setDumperPos(DUMPER_DOWN); }
     public void extendHorizontalSlides()  { setHorizontalSlidesPos( HORI_SLIDES_EXTENDED  ); }
@@ -240,8 +240,8 @@ public class CardboardOne extends MecanumDrive {
     /**
      * @param setPos [0-1]
      */
-    public void setUpperArmPos(double setPos) { // needs to keep dumper level while raising arm
-        setPos = Range.clip(setPos, UPPER_ARM_LOWERED, UPPER_ARM_RAISED);
+    public void setUpperArmAndDumperPos(double setPos) { // needs to keep dumper level while raising arm
+        setPos = Range.clip(setPos, UPPER_ARM_RAISED, UPPER_ARM_LOWERED);
 
         double currentPos = getUpperArmPos();
         double dumperPos = getDumperPos();

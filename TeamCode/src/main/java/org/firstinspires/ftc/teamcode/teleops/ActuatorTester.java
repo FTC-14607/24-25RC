@@ -30,6 +30,7 @@ public class ActuatorTester extends LinearOpMode {
         robot = new CardboardOne(this);
         double servoPos = 0;
         robot.maxDrivePower = 0.9;
+        int slidePos = 0;
 
 //        robot.closeSampleClaw();
 //        robot.raiseSampleClaw();
@@ -38,25 +39,19 @@ public class ActuatorTester extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
 
-            if (gamepad2.right_trigger > 0) servoPos += 0.0005;
-            else if (gamepad2.left_trigger > 0) servoPos -= 0.0005;
+            if (gamepad2.right_trigger > 0) servoPos += 0.001;
+            else if (gamepad2.left_trigger > 0) servoPos -= 0.001;
 
             if (gamepad2.a) {
-                if (gamepad2.dpad_up) {
-                    robot.setVerticalSlidesPos(100);
-                } else if (gamepad2.dpad_right) {
-                    robot.setVerticalSlidesPos(300);
-                } else if (gamepad2.dpad_down) {
+                if (gamepad2.dpad_down) {
                     robot.setRunMode(robot.vertSlides, DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                } else if (gamepad2.dpad_left) {
-
-                    DcMotorSimple.Direction next = DcMotorSimple.Direction.REVERSE;
-                    if (robot.vertSlideLeft.getDirection() == next)
-                        next = DcMotorSimple.Direction.FORWARD;
-
-                    for (DcMotorEx slide : robot.vertSlides)
-                        slide.setDirection(next);
+                } else if (gamepad2.right_trigger > 0) {
+                    slidePos += 1;
+                } else if (gamepad2.left_trigger > 0) {
+                    slidePos -= 1;
                 }
+
+                robot.setVerticalSlidesPos(slidePos);
             }
 
             else if (gamepad2.b) {
