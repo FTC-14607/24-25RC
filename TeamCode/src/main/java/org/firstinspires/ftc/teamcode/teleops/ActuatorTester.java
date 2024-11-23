@@ -34,6 +34,7 @@ public class ActuatorTester extends LinearOpMode {
 
 //        robot.closeSampleClaw();
 //        robot.raiseSampleClaw();
+//        robot.lowerArm();
 
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {

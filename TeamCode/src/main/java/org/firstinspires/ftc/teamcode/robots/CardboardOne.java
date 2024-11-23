@@ -66,9 +66,12 @@ public class CardboardOne extends MecanumDrive {
 
     public static int VERT_SLIDES_BOTTOM = 0; // ticks
     public static int VERT_SLIDES_TOP = 4600;
+    public static int VERT_SLIDES_ABOVE_TOP_TRUSS = 3050;
+    public static int VERT_SLIDES_BELOW_TOP_TRUSS = 2075;
+    public static int VERT_SLIDES_PICKUP_SPECIMEN = 750;
     public static double VERT_SLIDES_DEFAULT_SPEED = 100;
     public static double VERT_SLIDES_INCHES_TO_TICKS = -1;
-    public static double UPPER_ARM_LOWERED = 0.8; // servo position [0, 1]
+    public static double UPPER_ARM_LOWERED = 0.6; // servo position [0, 1]
     public static double UPPER_ARM_RAISED = 0;
     public static double DUMPER_DOWN = 0;
     public static double DUMPER_TOP = 1;
@@ -81,7 +84,7 @@ public class CardboardOne extends MecanumDrive {
     public static double SAMPLE_CLAW_HORIZONTAL = 0.46; // to pick up vertical samples
     public static double SAMPLE_CLAW_VERTICAL = 0.14;
     public static double SAMPLE_CLAW_VERTICAL_FLIPPED = 0.78;
-    public static double SAMPLE_CLAW_DOWN = 0;
+    public static double SAMPLE_CLAW_DOWN = 0.2;
     public static double SAMPLE_CLAW_UP = 1;
 
     public static double SPECIMEN_CLAW_CLOSED = 0.1;
@@ -232,7 +235,7 @@ public class CardboardOne extends MecanumDrive {
             slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // TODO: test this
-            slide.setPower(0.2);
+            slide.setPower( (pos >= getVerticalSlidePos()) ? 0.8 : 0.5);
 //            slide.setVelocity( (pos > currentPos) ? VERT_SLIDES_DEFAULT_SPEED : 0.8*VERT_SLIDES_DEFAULT_SPEED);
         }
     }
