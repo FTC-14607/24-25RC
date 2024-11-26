@@ -31,6 +31,9 @@ public abstract class RobotBase {
 //    public BNO055IMU imu;
 
     public boolean showTelemetry = true;
+    public double voltageScaler;
+
+    public static final double NORMAL_VOLTAGE = 12.0; // volts
 
     public static class RobotDimensions {
         // INCHES
@@ -67,6 +70,7 @@ public abstract class RobotBase {
         imu = hardwareMap.get(IMU.class, "imu");
 
         controlHubVoltage = controlHubVoltageSensor.getVoltage();
+        voltageScaler = Math.max(1.0, NORMAL_VOLTAGE / controlHubVoltage);
     }
 
     public RobotDimensions getDimensions() { return dimensions; }
@@ -90,4 +94,38 @@ public abstract class RobotBase {
         for (DcMotor motor : motors)
             motor.setDirection(direction);
     }
+
+    /**
+     * Decreases power to emulate behavior when the robot is using an exactly 12V battery. Typically
+     * healthy batteries charge to 14V, so to keep behavior consistent power should be scaled. Note
+     * this uses the voltage read upon initialization, and does not re-read hub voltage. If voltage
+     * is under 12 volts, no changes are made.
+     * @param motorPower [0, 1]
+     * @return
+     */
+    public double scalePower(double motorPower) {
+        return motorPower * voltageScaler;
+    }
+
+    /**
+     * Range.clip except high/low bound order doesn't matter
+     * @param num
+     * @param bound1
+     * @param bound2
+     * @return
+     */
+    public static double clip(double num, double bound1, double bound2) {
+        double low = bound1, high = bound2;
+        if (bound1 > bound2) { low = bound2; high = bound1; }
+        return (num < low) ? low : Math.min(num, high);
+    }
+
+    public static int clip(int num, int bound1, int bound2) {
+        int low = bound1, high = bound2;
+        if (bound1 > bound2) { low = bound2; high = bound1; }
+        return (num < low) ? low : Math.min(num, high);
+    }
+    // generally using floats, shorts, or bytes won't make much of a performance difference and I'm too lazy to add them
+
+
 }

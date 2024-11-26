@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -50,6 +51,12 @@ public class CardboardOne extends MecanumDrive {
 
     public static double trP = 0.025, trI = 0, trD = 0, trF = 0, trTol = 3;
     public PIDFController translationController; // takes inches, outputs power
+
+    public static PIDFController vertSlidesController;
+    public static double p_sli = 0, i_sli = 0, d_sli = 0;
+    public static double f_sli = 0.3; // TODO: tune this
+
+
     public ElapsedTime holdTimer = new ElapsedTime();
 
     // telemetry

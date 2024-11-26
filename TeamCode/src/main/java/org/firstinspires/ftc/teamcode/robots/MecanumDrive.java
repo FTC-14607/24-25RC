@@ -148,7 +148,8 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
             for (int i = 0; i < 4; i++)
                 powers[i] /= ( maxInput / maxDrivePower );
 
-        // set power
+        // TODO: tryout scalePower
+        // set power scaled for voltage
         for (int i = 0; i < 4; i++)
             drivetrain[i].setPower(powers[i]);
 

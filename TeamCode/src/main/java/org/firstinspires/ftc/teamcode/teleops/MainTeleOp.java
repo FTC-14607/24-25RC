@@ -40,6 +40,7 @@ public class MainTeleOp extends LinearOpMode {
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
+            // TODO: univeral robot.update() method
 
             // intake
             if (gamepad1.right_bumper || ( (!(gamepad2.a || gamepad2.b) && gamepad2.right_bumper))) {

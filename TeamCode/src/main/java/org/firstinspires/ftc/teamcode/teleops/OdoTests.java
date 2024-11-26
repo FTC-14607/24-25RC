@@ -5,6 +5,7 @@ import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.robots.Outreach;
 
@@ -18,40 +19,50 @@ public class OdoTests extends LinearOpMode {
     public void runOpMode(){
 
         robot = new Outreach(this);
-        robot.maxDrivePower = 0.7;
+        robot.maxDrivePower = 1.0;
+
+        double nextX = 0;
+        double nextY = 0;
+        double nextHeading = 0;
 
         waitForStart();
 
         while (opModeIsActive()) {
+            robot.updatePose();
 
-            if (gamepad1.a) {
-                robot.forward(30, 4);
-                robot.forward(-20, 4);
-                robot.forward(10, 4);
-            } else if (gamepad1.b) {
-                robot.rotate(90, 4);
-                return;
-            } else if (gamepad1.x) {
-                robot.strafe(20, 4);
-            } else if (gamepad1.y) {
-                robot.resetPose();
-            }
+            if (gamepad1.a)
+                if      (gamepad1.right_bumper) nextX += 0.025;
+                else if (gamepad1.left_bumper)  nextX -= 0.025;
+
+            if (gamepad1.b)
+                if      (gamepad1.right_bumper) nextY += 0.025;
+                else if (gamepad1.left_bumper)  nextY -= 0.025;
+
+            if (gamepad1.y)
+                if      (gamepad1.right_bumper) nextHeading += 0.1;
+                else if (gamepad1.left_bumper)  nextHeading -= 0.1;
+            nextHeading = Range.clip(nextHeading, -180, 180);
+
+            if (gamepad1.x)
+                robot.moveBy(new Pose2d(nextX, nextY, new Rotation2d(Math.toRadians(nextHeading))), 2);
+
 
             if (gamepad1.dpad_up) {
-                robot.moveBy(new Pose2d(10, 0, new Rotation2d(0)), 4);
+                robot.moveBy(new Pose2d(10, 0, new Rotation2d(0)), 2);
 
             } else if (gamepad1.dpad_right) {
-                robot.moveBy(new Pose2d(0, 10, new Rotation2d(0)), 4);
+                robot.moveBy(new Pose2d(-10, 0, new Rotation2d(0)), 2);
 
             } else if (gamepad1.dpad_down) {
-                robot.moveBy(new Pose2d(0, 0, new Rotation2d(Math.toRadians(90))), 4);
+                robot.moveBy(new Pose2d(0, 0, new Rotation2d(Math.toRadians(90))), 2);
 
             } else if (gamepad1.dpad_left) {
-                robot.moveBy(new Pose2d(10, 10, new Rotation2d(Math.toRadians(90))), 4);
+                robot.moveBy(new Pose2d(10, 10, new Rotation2d(Math.toRadians(90))), 2);
             }
 
-            robot.updatePose();
-            telemetry.addData("Pose", Outreach.currentPose);
+            telemetry.addData("Pose (x,y,heading)",
+                    "(%5.2f, %5.2f, %6.2f)", robot.currentPose.getX(), robot.currentPose.getY(), robot.currentPose.getRotation().getDegrees());
+            telemetry.addData("Next Target (x,y,heading)", "(%5.2f, %5.2f, %6.2f)", nextX, nextY, nextHeading);
             telemetry.update();
         }
     }
