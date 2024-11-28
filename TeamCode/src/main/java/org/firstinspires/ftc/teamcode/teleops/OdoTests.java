@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.robots.Outreach;
-
-@Config
+//
+//@Config
 @TeleOp(name = "Odometry Test", group = "Test")
 public class OdoTests extends LinearOpMode {
 
@@ -30,6 +30,8 @@ public class OdoTests extends LinearOpMode {
         while (opModeIsActive()) {
             robot.updatePose();
 
+            if (gamepad1.a && gamepad1.b) robot.resetPose();
+
             if (gamepad1.a)
                 if      (gamepad1.right_bumper) nextX += 0.025;
                 else if (gamepad1.left_bumper)  nextX -= 0.025;
@@ -47,17 +49,22 @@ public class OdoTests extends LinearOpMode {
                 robot.moveBy(new Pose2d(nextX, nextY, new Rotation2d(Math.toRadians(nextHeading))), 2);
 
 
+
             if (gamepad1.dpad_up) {
-                robot.moveBy(new Pose2d(10, 0, new Rotation2d(0)), 2);
+                robot.moveBy(10, 0, 0, 2);
+//                robot.moveBy(new Pose2d(10, 0, new Rotation2d(0)), 2);
 
             } else if (gamepad1.dpad_right) {
-                robot.moveBy(new Pose2d(-10, 0, new Rotation2d(0)), 2);
+                robot.moveBy(-10,0,0,2);
+//                robot.moveBy(new Pose2d(-10, 0, new Rotation2d(0)), 2);
 
             } else if (gamepad1.dpad_down) {
-                robot.moveBy(new Pose2d(0, 0, new Rotation2d(Math.toRadians(90))), 2);
+                robot.moveBy(0,0,90,2);
+//                robot.moveBy(new Pose2d(0, 0, new Rotation2d(Math.toRadians(90))), 2);
 
             } else if (gamepad1.dpad_left) {
-                robot.moveBy(new Pose2d(10, 10, new Rotation2d(Math.toRadians(90))), 2);
+                robot.moveBy(10,0,90,2);
+//                robot.moveBy(new Pose2d(10, 10, new Rotation2d(Math.toRadians(90))), 2);
             }
 
             telemetry.addData("Pose (x,y,heading)",

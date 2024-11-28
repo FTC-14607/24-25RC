@@ -1,24 +1,30 @@
-package org.firstinspires.ftc.teamcode.robots;
+package org.firstinspires.ftc.teamcode.util.odometry;
 
-import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
-import com.arcrobotics.ftclib.geometry.Transform2d;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.util.odometry.FTCLibThreeWheelOdometry;
-import org.firstinspires.ftc.teamcode.util.odometry.MotorEncoder;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.robots.DriveTrain;
 
-@Config
-public class Outreach extends MecanumDrive {
+// TODO: test if this works then cleanup this and Outreach
+/**
+ * Drives a robot to given positions using a localizer (odometry). Right now it only accommodates
+ * a mecanum wheel drivetrain (and because other odo setups are untested, three wheel odometry).
+ */
+public class OdometryDriver {
 
-    // actuators and sensors
-    public MotorEncoder odoRight;
-    public MotorEncoder odoLeft;
-    public MotorEncoder odoPerp;
+    private RobotLocalizer odo;
+    private DriveTrain driveTrain;
+    private LinearOpMode opMode;
+    private Telemetry telemetry;
+
+    public boolean showTelemetry = true;
+
+    public ElapsedTime holdTimer = new ElapsedTime();
 
     // controllers
     public static double p_yaw = 0.60, i_yaw = 0, d_yaw = 0;
@@ -29,10 +35,7 @@ public class Outreach extends MecanumDrive {
     public static double tol_trans = 0.25; // quarter inch
     public PIDController translationController; // takes inches, outputs power
 
-    public ElapsedTime holdTimer = new ElapsedTime();
 
-    // internal control and telemetry
-    public FTCLibThreeWheelOdometry odo;
     public enum DriveMode { MANUAL, DRIVE_TO_TARGET }
     private DriveMode driveMode = DriveMode.DRIVE_TO_TARGET;
 
@@ -40,10 +43,6 @@ public class Outreach extends MecanumDrive {
     public Pose2d targetPose;
     private double holdTargetDuration;
 
-    // physical constants
-    public final static RobotDimensions DIMENSIONS = new RobotDimensions(
-            18, 18, 18, 9.6, 537.68984
-    );
     public static double TRACK_WIDTH = 8.2087;        // 20.85 cm
     public static double CENTER_WHEEL_OFFSET = 0;   // 0 cm
 
@@ -51,23 +50,12 @@ public class Outreach extends MecanumDrive {
     public static double ODO_TICKS_PER_ROTATION = 2000;
     public static double ODO_WHEEL_DIAMETER = 48.0 / 10 / 2.54;
 
-    public Outreach(LinearOpMode opmode){
-        super(opmode);
-        STRAFE_MULTIPLIER = 1.3;
-        dimensions = DIMENSIONS;
+    public OdometryDriver(RobotLocalizer odo, DriveTrain driveTrain, LinearOpMode opMode){
 
-        odoRight = new MotorEncoder(frontLeft); // encoders are plugged in next to motors
-        odoLeft =  new MotorEncoder(backRight);
-        odoPerp =  new MotorEncoder(frontRight);
-
-        odoLeft.setDirection(MotorEncoder.Direction.REVERSE);
-//        odoPerp.setDirection(MotorEncoder.Direction.REVERSE);
-
-        odo = new FTCLibThreeWheelOdometry(
-                odoLeft, odoRight, odoPerp,
-                TRACK_WIDTH, CENTER_WHEEL_OFFSET, ODO_TICKS_PER_ROTATION, ODO_WHEEL_DIAMETER);
-
-        imu.resetYaw();
+        this.odo = odo;
+        this.driveTrain = driveTrain;
+        this.opMode = opMode;
+        this.telemetry = opMode.telemetry;
 
         yawController = new PIDController(p_yaw, i_yaw, d_yaw);
         yawController.setTolerance(tol_yaw);
@@ -84,22 +72,6 @@ public class Outreach extends MecanumDrive {
         odo.update();
         currentPose = odo.getPose();
     }
-
-    public void updateOrientation() {
-        orientation = imu.getRobotYawPitchRollAngles();
-    }
-
-//    public void forward(double distance, double holdTime) {
-//        move(distance, 0, 0, holdTime);
-//    }
-//
-//    public void strafe(double distance, double holdTime) {
-//        move(0, distance, 0, holdTime);
-//    }
-//
-//    public void rotate(double angle, double holdTime) {
-//        move(0, 0, angle, holdTime);
-//    }
 
     public void setDriveMode(DriveMode mode) {
         driveMode = mode;
@@ -161,11 +133,11 @@ public class Outreach extends MecanumDrive {
         double yError = yTarget - yCurrent;
         double distanceToTarget = Math.hypot(xError, yError);
 
-        /*
-        calculate translational and rotational power. translationPower is negated because the
-        PID has a setPoint of 0 and distanceToTarget is always positive (it's a distance), so
-        the error will always be negative and thus the output would've been negative.
-         */
+    /*
+    calculate translational and rotational power. translationPower is negated because the
+    PID has a setPoint of 0 and distanceToTarget is always positive (it's a distance), so
+    the error will always be negative and thus the output would've been negative.
+     */
         double translationPower = -translationController.calculate(distanceToTarget);
         double rotatePower      =  yawController        .calculate(yawCurrentRebounded);
 
@@ -175,24 +147,24 @@ public class Outreach extends MecanumDrive {
         // angle between robot's heading and the displacement error vector
         double phi = yawCurrent - theta;
 
-        /*
-        Calculate throttle and strafe power. strafePower is negated because sine component
-        points away from the yaw error, so it is negated to make the robot strafe towards the
-        target rather than away.
-         */
+    /*
+    Calculate throttle and strafe power. strafePower is negated because sine component
+    points away from the yaw error, so it is negated to make the robot strafe towards the
+    target rather than away.
+     */
         double throttlePower = translationPower *  Math.cos(phi);
         double strafePower   = translationPower * -Math.sin(phi);
 
         // drive the robot while the target isn't reached
         if ( !translationController.atSetPoint() || !yawController.atSetPoint() ) {
-            drive(throttlePower, strafePower, rotatePower);
+            driveTrain.drive(throttlePower, strafePower, rotatePower);
             holdTimer.reset();
         }
 
         // otherwise targets are reached; hold position
         else {
             telemetry.addLine("Holding...");
-            brake();
+            driveTrain.brake();
             if (holdTimer.time() > holdTime) //:3 ~~~nyaaa
                 return true;
         }
@@ -296,7 +268,7 @@ public class Outreach extends MecanumDrive {
             // drive the robot while targets aren't reached
             if ( !translationController.atSetPoint() || !yawController.atSetPoint() ) {
 
-                drive(throttlePower, strafePower, rotatePower);
+                driveTrain.drive(throttlePower, strafePower, rotatePower);
 
                 holdTimer.reset();
 
@@ -304,7 +276,7 @@ public class Outreach extends MecanumDrive {
             } else {
                 telemetry.addLine("Holding...");
 
-                brake();
+                driveTrain.brake();
 
                 if (holdTimer.time() > holdTime)
                     break;
@@ -321,5 +293,6 @@ public class Outreach extends MecanumDrive {
         }
 
     }
+
 
 }

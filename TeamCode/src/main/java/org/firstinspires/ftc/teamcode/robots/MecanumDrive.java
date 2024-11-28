@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.robots;
 
-import androidx.annotation.NonNull;
-
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -9,11 +7,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.teamcode.util.odometry.FTCLibOdometry;
 
 /**
  * Robot with nothing but four mecanum wheels, and (optional) built-in encoders.
@@ -21,7 +14,7 @@ import org.firstinspires.ftc.teamcode.util.odometry.FTCLibOdometry;
  */
 
 @Config
-public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
+public class MecanumDrive extends RobotBase implements DriveTrain { // TODO: samplemecanumdrive?
 
     public DcMotorEx frontRight, frontLeft, backRight, backLeft;
     public DcMotorEx[] drivetrain;
@@ -30,6 +23,12 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
     public double rotateP = 3.5, rotateI = 0.4, rotateD = 0.2, rotateF = 0.3;
     public PIDFController rotatePIDF;
 
+    // these should be final but would be a hassle to write new constructors
+    public double STRAFE_MULTIPLIER = 1.;
+    public double STRAIGHT_ROTATION_CORRECTION = 0;
+    public double STRAFE_ROTATION_CORRECTION = 0;
+
+    // PIDs for built-in encoder based movement
     public PIDFController
             FRStrafePID = new PIDFController(1.47,0.06,0.1,0.3),
             FLStrafePID = new PIDFController(1.6,0.06,0.1,0.3),
@@ -126,6 +125,9 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
      * @return powers motors have been set to
      */
     public double[] drive(double throttle, double strafe, double rotate) {
+        strafe *= STRAFE_MULTIPLIER;
+        rotate += throttle * STRAIGHT_ROTATION_CORRECTION + strafe * STRAIGHT_ROTATION_CORRECTION;
+
         double fRPower = throttle - strafe - rotate;
         double fLPower = throttle + strafe + rotate;
         double bRPower = throttle + strafe - rotate;
@@ -137,12 +139,7 @@ public class MecanumDrive extends RobotBase { // TODO: samplemecanumdrive?
         // TODO: scale power for voltage (linear relationship, may want to read only once during init): controlHubVoltageSensor.getVoltage();
         // maybe also use motor.isMotorOverCurrent(); (test if either of these affect loop speed)
 
-        double maxInput = Math.max(
-                Math.abs(fRPower), Math.max(
-                Math.abs(fLPower), Math.max(
-                Math.abs(bRPower),
-                Math.abs(bLPower)
-        )));
+        double maxInput = Math.abs(throttle) + Math.abs(strafe) + Math.abs(rotate);
 
         if (maxInput > maxDrivePower)
             for (int i = 0; i < 4; i++)

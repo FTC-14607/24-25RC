@@ -9,12 +9,11 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.util.odometry.FTCLibOdometry;
+import org.firstinspires.ftc.teamcode.util.odometry.FTCLibThreeWheelOdometry;
 
 @Config
 public class CardboardOne extends MecanumDrive {
@@ -38,7 +37,7 @@ public class CardboardOne extends MecanumDrive {
     public MotorEx odoRight;
     public MotorEx odoLeft;
     public MotorEx odoPerp;
-    public FTCLibOdometry odo;
+    public FTCLibThreeWheelOdometry odo;
 
     // controllers
     public static double tP = 0.025, tI = 0, tD = 0, tF = 0;
