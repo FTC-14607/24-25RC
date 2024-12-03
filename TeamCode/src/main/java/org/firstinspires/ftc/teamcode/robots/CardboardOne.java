@@ -61,9 +61,7 @@ public class CardboardOne extends MecanumDrive {
     // telemetry
     public static Pose2d currentPose;
 
-    //  constants
-    public final static RobotDimensions DIMENSIONS = new RobotDimensions(
-            18, 18, 18, 9.6, 537.68984);
+    // constants
     public static double TRACK_WIDTH = 8.2087;        // 20.85 cm TODO
     public static double CENTER_WHEEL_OFFSET = 0;   // 0 cm TODO
 
@@ -99,7 +97,6 @@ public class CardboardOne extends MecanumDrive {
 
     public CardboardOne(LinearOpMode opmode) {
         super(opmode);
-        dimensions = DIMENSIONS;
 
         // connect to hardware
         vertSlideRight  = hardwareMap.get(DcMotorEx.class, "vertSlideRight");

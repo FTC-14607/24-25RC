@@ -17,7 +17,9 @@ import java.util.List;
 
 /**
  * Robot with nothing but a Control Hub. Intended to be extended by all hardware control classes for
- * any FTC Autonomous or Driver-Controlled purposes.
+ * any FTC Autonomous or Driver-Controlled purposes. A good utilization of Java's OOP organization
+ * is to make each child class only implement what is unique to it. For example, you should not
+ * re-implement mecanum drive code or odo code since those are common to many robots.
  */
 public abstract class RobotBase {
     public LinearOpMode opMode;
@@ -28,32 +30,14 @@ public abstract class RobotBase {
 
     public double controlHubVoltage;
     public YawPitchRollAngles orientation;
-//    public BNO055IMU imu;
 
     public boolean showTelemetry = true;
     public double voltageScaler;
 
     public static final double NORMAL_VOLTAGE = 12.0; // volts
 
-    public static class RobotDimensions {
-        // INCHES
-        public final double ROBOT_LENGTH, ROBOT_WIDTH, ROBOT_HEIGHT;
-        // CENTIMETERS
-        public final double WHEEL_DIAMETER, WHEEL_CIRCUMFERENCE;
-        // TICKS / ROTATION (use -1 if built-in motor encoders are not used)
-        public final double DRIVETRAIN_TICKS;
-
-        public RobotDimensions(double robotLength, double robotWidth, double robotHeight, double wheelDiameter, double drivetrainTicks) {
-            ROBOT_LENGTH = robotLength;
-            ROBOT_WIDTH = robotWidth;
-            ROBOT_HEIGHT = robotHeight;
-            WHEEL_DIAMETER = wheelDiameter;
-            WHEEL_CIRCUMFERENCE = Math.PI * wheelDiameter;
-            DRIVETRAIN_TICKS = drivetrainTicks;
-        }
-    }
-
-    protected static RobotDimensions dimensions;
+    // physical constants (would be better if these were final but that's annoying)
+    public double ROBOT_LENGTH, ROBOT_WIDTH, ROBOT_HEIGHT;
 
     public RobotBase(LinearOpMode opModeInstance) {
         opMode = opModeInstance;
@@ -72,8 +56,6 @@ public abstract class RobotBase {
         controlHubVoltage = controlHubVoltageSensor.getVoltage();
         voltageScaler = Math.max(1.0, NORMAL_VOLTAGE / controlHubVoltage);
     }
-
-    public RobotDimensions getDimensions() { return dimensions; }
 
     /**
      * Sets all the motors in motors[] to the passed run mode

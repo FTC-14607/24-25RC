@@ -21,7 +21,6 @@ public class Octonaut extends MecanumDrive {
     // controllers
     public PIDFController slidepidfcontroller;
 
-    public final static RobotDimensions DIMENSIONS = new RobotDimensions(-1, -1, -1, 9.6, 537.7);
     public final static int SLIDEBOTTOM = 40;
     public final static int SLIDETOP = 960;
     public final static int GROUND = 40;
@@ -29,7 +28,6 @@ public class Octonaut extends MecanumDrive {
     public Octonaut(LinearOpMode opModeInstance) {
         super(opModeInstance);
         // Drivetrain Motors: goBilda 5203 Series Yellow Jacket Planetary Gear Motor, 312 RPM
-        dimensions = Octonaut.DIMENSIONS;
 
 //        odometry = new ThreeWheelOdometry(
 //            hardwareMap.get(DcMotor.class, "odoRight"),

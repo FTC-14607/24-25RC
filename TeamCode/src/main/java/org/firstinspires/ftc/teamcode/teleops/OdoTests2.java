@@ -6,7 +6,6 @@ import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.robots.Outreach;
 import org.firstinspires.ftc.teamcode.util.odometry.OdometryDriver;
@@ -22,25 +21,24 @@ public class OdoTests2 extends LinearOpMode {
 
         robot = new Outreach(this);
         robot.maxDrivePower = 0.9;
-        OdometryDriver odoDriver = new OdometryDriver(robot.odo, robot, this);
 
         Pose2d target = new Pose2d(0,0, new Rotation2d(0));
-        odoDriver.setTarget(target);
+        robot.setOdoDriverTarget(target);
+        robot.odoDriver.setHoldTargetDuration(0);
 
         waitForStart();
 
         while (opModeIsActive()) {
-            odoDriver.updatePose();
+            robot.odoDriver.updatePose();
 
-            if (gamepad1.a && gamepad1.b) odoDriver.resetPose();
+            if (gamepad1.a && gamepad1.b) robot.odoDriver.resetPose();
 
             if (gamepad1.atRest())
-                odoDriver.driveToTarget(0);
+                robot.odoDriver.lineToTarget();
             else
                 moveDriveTrain(gamepad1);
 
-            telemetry.addData("Pose (x,y,heading)",
-                    "(%5.2f, %5.2f, %6.2f)", odoDriver.currentPose.getX(), odoDriver.currentPose.getY(), odoDriver.currentPose.getRotation().getDegrees());
+            robot.addPoseToTelemetry();
             telemetry.update();
         }
     }

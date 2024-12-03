@@ -9,28 +9,21 @@ import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
  */
 public class FTCLibThreeWheelOdometry implements RobotLocalizer {
 
-    private MotorEncoder encoderLeft, encoderRight, encoderPerp;
+    private final MotorEncoder encoderLeft, encoderRight, encoderPerp;
+    private final double inchesPerTick;
 
-    private final double TRACK_WIDTH;         // [inches] distance between encoderRight and encoderLeft
-    private final double CENTER_WHEEL_OFFSET; // [inches] distance from encoderPerp to center of rotation
-    private final double TICKS_PER_ROTATION;  // encoder ticks
-    private final double WHEEL_DIAMETER;      // [inches] radius of odometry wheels
-
-    private double inchesPerTick;
-
-    private HolonomicOdometry holOdom;
-    private OdometrySubsystem odometry;
+    private final OdometrySubsystem odometry;
 
     /**
      * Connects localizer to encoder hardware. Constructor should be called after encoders are
      * initialized (mapped to using the hardwareMap).
-     * @param encoderLeft
-     * @param encoderRight
-     * @param encoderPerp
-     * @param trackWidth distance between encoderLeft and encoderRight
-     * @param centerWheelOffset distance between perpendicular/horizontal encoder and center of rotation
-     * @param ticksPerRotation encoder ticks per rotation
-     * @param wheelDiameter diameter of odometry wheels
+     * @param encoderLeft encoder on the left
+     * @param encoderRight encoder on the right
+     * @param encoderPerp encoder that is perpendicular to the others
+     * @param trackWidth [inches] distance between encoderLeft and encoderRight
+     * @param centerWheelOffset [inches] distance between perpendicular/horizontal encoder and center of rotation
+     * @param ticksPerRotation [ticks] encoder ticks per rotation
+     * @param wheelDiameter [inches] diameter of odometry wheels
      */
     public FTCLibThreeWheelOdometry(
             MotorEncoder encoderLeft, MotorEncoder encoderRight, MotorEncoder encoderPerp,
@@ -39,21 +32,15 @@ public class FTCLibThreeWheelOdometry implements RobotLocalizer {
         this.encoderLeft = encoderLeft;
         this.encoderRight = encoderRight;
         this.encoderPerp = encoderPerp;
-        this.TRACK_WIDTH = trackWidth;
-        this.TICKS_PER_ROTATION = ticksPerRotation;
-        this.CENTER_WHEEL_OFFSET = centerWheelOffset;
-        this.WHEEL_DIAMETER = wheelDiameter;
 
-        inchesPerTick = Math.PI * WHEEL_DIAMETER / TICKS_PER_ROTATION;
+        inchesPerTick = Math.PI * wheelDiameter / ticksPerRotation;
 
-        holOdom = new HolonomicOdometry(
+        odometry = new OdometrySubsystem(new HolonomicOdometry(
                 () -> encoderTicksToInches(encoderLeft.getCurrentPosition()),
                 () -> encoderTicksToInches(encoderRight.getCurrentPosition()),
                 () -> encoderTicksToInches(encoderPerp.getCurrentPosition()),
-                TRACK_WIDTH, CENTER_WHEEL_OFFSET
-        );
-
-        odometry = new OdometrySubsystem(holOdom);
+                trackWidth, centerWheelOffset
+        ));
     }
 
     private double encoderTicksToInches(int ticks) {

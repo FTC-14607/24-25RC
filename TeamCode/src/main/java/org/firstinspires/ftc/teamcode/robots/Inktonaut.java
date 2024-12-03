@@ -23,9 +23,6 @@ public class Inktonaut extends MecanumDrive {
     public PIDFController slidepidfcontroller;
 
     // Drivetrain Motors: goBilda Yellow Jacket 312 RPM
-    public final static RobotDimensions DIMENSIONS = new RobotDimensions(
-            -1, -1, -1, 9.6, 537.7
-    );
     public final static int SLIDES_BOTTOM = 0; // ticks
     public final static int SLIDES_TOP = 670;
     public final static double SLIDES_DEFAULT_SPEED = 300; // ticks / sec
@@ -39,7 +36,6 @@ public class Inktonaut extends MecanumDrive {
 
     public Inktonaut(LinearOpMode opModeInstance) {
         super(opModeInstance);
-        dimensions = Inktonaut.DIMENSIONS;
 
         slides = hardwareMap.get(DcMotorEx.class, "slides");
         claw = hardwareMap.get(Servo.class, "claw");

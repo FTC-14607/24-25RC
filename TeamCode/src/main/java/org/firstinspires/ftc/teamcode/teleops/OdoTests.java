@@ -28,9 +28,9 @@ public class OdoTests extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            robot.updatePose();
+            robot.odoDriver.updatePose();
 
-            if (gamepad1.a && gamepad1.b) robot.resetPose();
+            if (gamepad1.a && gamepad1.b) robot.odoDriver.resetPose();
 
             if (gamepad1.a)
                 if      (gamepad1.right_bumper) nextX += 0.025;
@@ -46,29 +46,23 @@ public class OdoTests extends LinearOpMode {
             nextHeading = Range.clip(nextHeading, -180, 180);
 
             if (gamepad1.x)
-                robot.moveBy(new Pose2d(nextX, nextY, new Rotation2d(Math.toRadians(nextHeading))), 2);
-
+                robot.odoDriver.lineBy(nextX, nextY, nextHeading);
 
 
             if (gamepad1.dpad_up) {
-                robot.moveBy(10, 0, 0, 2);
-//                robot.moveBy(new Pose2d(10, 0, new Rotation2d(0)), 2);
+                robot.odoDriver.lineBy(10, 0, 0);
 
             } else if (gamepad1.dpad_right) {
-                robot.moveBy(-10,0,0,2);
-//                robot.moveBy(new Pose2d(-10, 0, new Rotation2d(0)), 2);
+                robot.odoDriver.lineBy(-10,0,0);
 
             } else if (gamepad1.dpad_down) {
-                robot.moveBy(0,0,90,2);
-//                robot.moveBy(new Pose2d(0, 0, new Rotation2d(Math.toRadians(90))), 2);
+                robot.odoDriver.lineBy(0,0,90);
 
             } else if (gamepad1.dpad_left) {
-                robot.moveBy(10,0,90,2);
-//                robot.moveBy(new Pose2d(10, 10, new Rotation2d(Math.toRadians(90))), 2);
+                robot.odoDriver.lineBy(10,0,90);
             }
 
-            telemetry.addData("Pose (x,y,heading)",
-                    "(%5.2f, %5.2f, %6.2f)", robot.currentPose.getX(), robot.currentPose.getY(), robot.currentPose.getRotation().getDegrees());
+            robot.addPoseToTelemetry();
             telemetry.addData("Next Target (x,y,heading)", "(%5.2f, %5.2f, %6.2f)", nextX, nextY, nextHeading);
             telemetry.update();
         }

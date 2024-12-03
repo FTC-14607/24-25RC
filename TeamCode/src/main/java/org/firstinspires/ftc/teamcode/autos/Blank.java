@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.robots.Inktonaut;
 
 
 @Config
-@Autonomous(name = "Blank Main Auto", group = "Main")
+@Autonomous(name = "Blank Main Auto", group = "Main", preselectTeleOp = "Main TeleOp")
 public class Blank extends LinearOpMode {
     CardboardOne robot;
 

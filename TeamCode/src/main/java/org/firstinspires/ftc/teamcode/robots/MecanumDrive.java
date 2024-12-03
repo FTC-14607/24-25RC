@@ -10,11 +10,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 /**
  * Robot with nothing but four mecanum wheels, and (optional) built-in encoders.
- * External odometry should be implemented in a child class.
  */
-
 @Config
-public class MecanumDrive extends RobotBase implements DriveTrain { // TODO: samplemecanumdrive?
+public abstract class MecanumDrive extends RobotBase implements DriveTrain { // TODO: samplemecanumdrive?
 
     public DcMotorEx frontRight, frontLeft, backRight, backLeft;
     public DcMotorEx[] drivetrain;
@@ -22,11 +20,6 @@ public class MecanumDrive extends RobotBase implements DriveTrain { // TODO: sam
 
     public double rotateP = 3.5, rotateI = 0.4, rotateD = 0.2, rotateF = 0.3;
     public PIDFController rotatePIDF;
-
-    // these should be final but would be a hassle to write new constructors
-    public double STRAFE_MULTIPLIER = 1.;
-    public double STRAIGHT_ROTATION_CORRECTION = 0;
-    public double STRAFE_ROTATION_CORRECTION = 0;
 
     // PIDs for built-in encoder based movement
     public PIDFController
@@ -45,6 +38,14 @@ public class MecanumDrive extends RobotBase implements DriveTrain { // TODO: sam
             blP=2.8, blI=0, blD=1.21, blF=0.21,
             headKeepP=40, headKeepI=0, headKeepD=10, headKeepF=0;
     public PIDFController FRPIDF, FLPIDF, BRPIDF, BLPIDF, headKeepPIDF;
+
+    // physical constants
+    public double WHEEL_DIAMETER; // inches
+    public double WHEEL_CIRCUMFERENCE; // inches
+    public double DRIVETRAIN_TICKS; // ticks
+    public double STRAFE_MULTIPLIER = 1.;
+    public double STRAIGHT_ROTATION_CORRECTION = 0;
+    public double STRAFE_ROTATION_CORRECTION = 0;
 
     public MecanumDrive(LinearOpMode opModeInstance) {
         super(opModeInstance);
@@ -78,11 +79,6 @@ public class MecanumDrive extends RobotBase implements DriveTrain { // TODO: sam
 
     }
 
-    public MecanumDrive(LinearOpMode opMode, RobotDimensions dimensions) {
-        this(opMode);
-        MecanumDrive.dimensions = dimensions;
-    }
-
     // ------------------------------------- MISC METHODS ------------------------------------------
     /**
      * Assigns the current position of every motor on the drivetrain to tick (position) 0
@@ -91,13 +87,13 @@ public class MecanumDrive extends RobotBase implements DriveTrain { // TODO: sam
 
     /**
      * Converts a distance (IN CENTIMETERS) on the field to a number of ticks for the motor to rotate about
-     * @param distance (centimeters)
+     * @param distance (inches)
      * @return Ticks for the drivetrain motors to turn
      */
     public int distanceToTicks(double distance) { return distanceToTicks(distance, false); }
 
     public int distanceToTicks(double distance, boolean strafe) {
-        return (int) Math.round( (distance/dimensions.WHEEL_CIRCUMFERENCE * dimensions.DRIVETRAIN_TICKS) * (strafe ? 1.2:1)  );
+        return (int) Math.round( (distance/WHEEL_CIRCUMFERENCE * DRIVETRAIN_TICKS) * (strafe ? 1.2:1)  );
     }
 
     /**
@@ -208,6 +204,7 @@ public class MecanumDrive extends RobotBase implements DriveTrain { // TODO: sam
         right(-distance, speed);
     }
 
+    // TODO: create a new RobotLocalizer that uses built-in encoders and IMU so these methods can be removed
     /**
      * forward but uses separate external pid for each motor and has angle correction
      */

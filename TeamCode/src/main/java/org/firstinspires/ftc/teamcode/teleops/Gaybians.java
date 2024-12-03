@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.robots.Octonaut;
 
 import javax.annotation.Nonnegative;
 
+@Disabled
 @TeleOp(name = "Old Main Linear TeleOp", group = "Main")
 public class Gaybians extends LinearOpMode {
 

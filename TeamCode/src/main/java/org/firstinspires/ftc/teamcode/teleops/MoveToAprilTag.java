@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.autos;
+package org.firstinspires.ftc.teamcode.teleops;
 
 import android.util.Size;
 
@@ -13,8 +13,10 @@ import org.firstinspires.ftc.teamcode.robots.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robots.Octonaut;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.robots.Outreach;
 import org.firstinspires.ftc.teamcode.robots.RobotBase;
 import org.firstinspires.ftc.teamcode.util.odometry.Pose;
 import org.firstinspires.ftc.teamcode.util.roadrunner.drive.SampleMecanumDrive;
@@ -37,9 +39,8 @@ import java.util.stream.Stream;
 
 // USE SCRCPY TO VIEW CAMERA STREAM DURING OPMODE
 
-@Disabled
 @Config
-@Autonomous(name = "AprilTag Auto", group = "Main")
+@TeleOp(name = "MoveAprilTag Test", group = "Main")
 public class MoveToAprilTag extends LinearOpMode {
     private VisionPortal visionPortal;
     private AprilTagProcessor aprilTagProcessor;
@@ -66,28 +67,72 @@ public class MoveToAprilTag extends LinearOpMode {
 
     @Override
     public void runOpMode(){
-//        robot = new Octonaut(this);
-        robot = new MecanumDrive(this, Octonaut.DIMENSIONS);
+        robot = new Outreach(this);
+
+        double targetX = 0;
+        double targetY = 0;
+        double targetYaw = 0;
 
         initVision();
         telemetry.addLine("VisionPortal Initialized.");
         telemetry.update();
-        sleep(1000);
 
-        double dist = 0, strafe = 0;
+        waitForStart();
+        while (opModeIsActive() && !isStopRequested()) {
+
+            // detect AprilTags
+            detectedTags = aprilTagProcessor.getDetections();
+            telemetry.addData("# Detected Tags", detectedTags.size());
+            AprilTagDetection targetTag = null;
+
+            // choose the first tag that is in the current game
+            for (AprilTagDetection tag : detectedTags)
+                if (tag.metadata != null) {
+                    targetTag = tag;
+                    break;
+                }
+
+            if (targetTag == null)
+                continue;
+
+            double straightDistance = targetTag.ftcPose.range * Math.cos(Math.toRadians(targetTag.ftcPose.bearing));
+            double lateralDistance = targetTag.ftcPose.range * Math.sin(Math.toRadians(targetTag.ftcPose.bearing));
+
+        }
+
         detectedTags = aprilTagProcessor.getDetections();
         telemetry.addData("# Detected Tags", detectedTags.size());
         telemetry.update();
-        for(AprilTagDetection detectedTag : detectedTags) {
-            if (detectedTag.metadata != null) {
-                dist = detectedTag.ftcPose.range * Math.cos(Math.toRadians(detectedTag.ftcPose.bearing));
-                strafe = detectedTag.ftcPose.range * Math.sin(Math.toRadians(detectedTag.ftcPose.bearing));
-                telemetry.addData("Detected Tag", detectedTag.id);
-                telemetry.addData("Distance (in)", dist);
+
+        AprilTagDetection detectedTag = null;
+
+        for (AprilTagDetection tag : detectedTags)
+            if (tag.metadata != null) {
+                detectedTag = tag;
                 break;
             }
+
+        double dist, strafe;
+        if (detectedTag == null) {
+
         }
-        telemetry.addData("(Ticks)", robot.distanceToTicks((dist*2.54)-5));
+
+        double dist = 0, strafe = 0;
+        detectedTags = aprilTagProcessor.getDetections();
+        AprilTagDetection detectedTag = null;
+        telemetry.addData("# Detected Tags", detectedTags.size());
+        telemetry.update();
+
+        for(AprilTagDetection tag : detectedTags) {
+            if (tag.metadata != null) {
+                detectedTag = tag;
+                dist = detectedTag.ftcPose.range * Math.cos(Math.toRadians(detectedTag.ftcPose.bearing));
+                strafe = detectedTag.ftcPose.range * Math.sin(Math.toRadians(detectedTag.ftcPose.bearing));
+                break;
+            }fdf
+        }
+        telemetry.addData("Detected Tag", detectedTag.id);
+        telemetry.addData("Distance (in)", dist);
         telemetry.update();
 
 
