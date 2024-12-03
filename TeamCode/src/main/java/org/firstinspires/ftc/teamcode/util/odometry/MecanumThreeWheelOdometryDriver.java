@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.util.odometry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
+import com.arcrobotics.ftclib.geometry.Transform2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -10,8 +11,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.robots.DriveTrain;
 
 /**
- * Drives a robot to given positions using a localizer (odometry). Right now it only accommodates
- * a mecanum wheel drivetrain (and because other odo setups are untested, three wheel odometry).
+ * Drives a mecanum drivetrain robot to given positions using a 3-wheel odometry localizer.
  */
 public class MecanumThreeWheelOdometryDriver implements OdometryDriver {
 
@@ -79,17 +79,36 @@ public class MecanumThreeWheelOdometryDriver implements OdometryDriver {
         yawController.setSetPoint(target.getHeading());
     }
 
-    public void setDisplacement(Pose2d displacement) {
+    /**
+     *
+     * @param straightChange [inches]
+     * @param lateralChange [inches]
+     * @param yawChange [degrees]
+     */
+    public void setRelativeTarget(double straightChange, double lateralChange, double yawChange) {
+        double yawCurrent = currentPose.getHeading();
+        double xChange = straightChange * Math.cos(yawCurrent) + lateralChange * Math.sin(yawCurrent);
+        double yChange = straightChange *-Math.sin(yawCurrent) + lateralChange * Math.cos(yawCurrent);
 
+        double xTarget = currentPose.getX() + xChange;
+        double yTarget = currentPose.getY() + yChange;
+        double yawTarget = yawCurrent + Math.toRadians(yawChange);
+
+        setTarget(new Pose2d(xTarget, yTarget, new Rotation2d(yawTarget)));
+    }
+
+    public boolean drive() {
+        // in the future we could acoomodate splining and speed control
+        return lineDrive();
     }
 
     /**
      * Drives to targetPose if it exists and driveMode is DRIVE_TO_TARGET. Should be called after
-     * setTarget/setDisplacement, and should be called every OpMode loop (while(opModeIsActive()) iteration.
+     * setTarget, and should be called every OpMode loop (while(opModeIsActive()) iteration.
      * @return true if the driver does not drive the motors (either because it is not supposed to
      * or if it has reached the target), false otherwise.
      */
-    public boolean lineToTarget() {
+    public boolean lineDrive() {
         if (driveMode == DriveMode.MANUAL || targetPose == null)
             return true;
 
@@ -146,7 +165,7 @@ public class MecanumThreeWheelOdometryDriver implements OdometryDriver {
         else {
             telemetry.addLine("Holding...");
             driveTrain.brake();
-            if (holdTimer.time() > holdTargetDuration) //:3 ~~~nyaaa
+            if (holdTimer.time() > holdTargetDuration)
                 return true;
         }
 
@@ -167,17 +186,17 @@ public class MecanumThreeWheelOdometryDriver implements OdometryDriver {
 
     /**
      *
-     * @param xChange inches
-     * @param yChange inches
-     * @param yawChange degrees
+     * @param straightChange [inches]
+     * @param lateralChange [inches]
+     * @param yawChange [degrees
      */
-    public void lineBy(double xChange, double yChange, double yawChange) {
+    public void lineBy(double straightChange, double lateralChange, double yawChange) {
         updatePose();
-        double xTarget = currentPose.getX() + xChange;
-        double yTarget = currentPose.getY() + yChange;
-        double yawTarget = currentPose.getRotation().getDegrees() + yawChange;
+        setRelativeTarget(straightChange, lateralChange, yawChange);
 
-        lineTo(xTarget, yTarget, yawTarget);
+        while(opMode.opModeIsActive() && !opMode.isStopRequested())
+            if (lineDrive())
+                return;
     }
 
     /**
@@ -190,7 +209,7 @@ public class MecanumThreeWheelOdometryDriver implements OdometryDriver {
         setTarget(new Pose2d(x, y, new Rotation2d(Math.toRadians(yaw))));
 
         while(opMode.opModeIsActive() && !opMode.isStopRequested())
-            if (lineToTarget())
+            if (lineDrive())
                 return;
     }
 

@@ -63,7 +63,7 @@ public class MoveToAprilTag extends LinearOpMode {
 
     private List<AprilTagDetection> detectedTags;
 
-    MecanumDrive robot;
+    Outreach robot;
 
     @Override
     public void runOpMode(){
@@ -77,13 +77,10 @@ public class MoveToAprilTag extends LinearOpMode {
         telemetry.addLine("VisionPortal Initialized.");
         telemetry.update();
 
-        waitForStart();
-        while (opModeIsActive() && !isStopRequested()) {
-
-            // detect AprilTags
+        // detect AprilTags
+        AprilTagDetection targetTag = null;
+        while (true) {
             detectedTags = aprilTagProcessor.getDetections();
-            telemetry.addData("# Detected Tags", detectedTags.size());
-            AprilTagDetection targetTag = null;
 
             // choose the first tag that is in the current game
             for (AprilTagDetection tag : detectedTags)
@@ -92,53 +89,43 @@ public class MoveToAprilTag extends LinearOpMode {
                     break;
                 }
 
-            if (targetTag == null)
-                continue;
+            if (targetTag != null) break;
 
+            telemetry.addLine("Searching for tags...");
+            telemetry.addData("# Detected Tags", detectedTags.size());
+            telemetry.update();
+        }
+
+        telemetry.addData("ftcPose", targetTag.ftcPose);
+        telemetry.addData("robotPose", targetTag.robotPose);
+        telemetry.update();
+
+        waitForStart();
+        while (opModeIsActive() && !isStopRequested()) {
+
+            // TODO: this assumes the camera is facing the front of the robot
             double straightDistance = targetTag.ftcPose.range * Math.cos(Math.toRadians(targetTag.ftcPose.bearing));
             double lateralDistance = targetTag.ftcPose.range * Math.sin(Math.toRadians(targetTag.ftcPose.bearing));
 
+            // convert to inches and don't drive into the tag
+            straightDistance = 2.54 * straightDistance - 10;
+            lateralDistance = 2.54 * lateralDistance;
+
+            telemetry.addData("Target Tag ID", targetTag.id);
+            telemetry.addData("Straight Distance to Target [in]", straightDistance);
+            telemetry.addData("Lateral Distance to Target [in]", lateralDistance);
+
+            // driving
+
+            // switch to raodrunner
+            robot.odoDriver.setRelativeTarget(straightDistance, lateralDistance, 0);
+
+            if (gamepad1.x)
+                robot.odoDriver.drive();
+
+            telemetry.update();
         }
 
-        detectedTags = aprilTagProcessor.getDetections();
-        telemetry.addData("# Detected Tags", detectedTags.size());
-        telemetry.update();
-
-        AprilTagDetection detectedTag = null;
-
-        for (AprilTagDetection tag : detectedTags)
-            if (tag.metadata != null) {
-                detectedTag = tag;
-                break;
-            }
-
-        double dist, strafe;
-        if (detectedTag == null) {
-
-        }
-
-        double dist = 0, strafe = 0;
-        detectedTags = aprilTagProcessor.getDetections();
-        AprilTagDetection detectedTag = null;
-        telemetry.addData("# Detected Tags", detectedTags.size());
-        telemetry.update();
-
-        for(AprilTagDetection tag : detectedTags) {
-            if (tag.metadata != null) {
-                detectedTag = tag;
-                dist = detectedTag.ftcPose.range * Math.cos(Math.toRadians(detectedTag.ftcPose.bearing));
-                strafe = detectedTag.ftcPose.range * Math.sin(Math.toRadians(detectedTag.ftcPose.bearing));
-                break;
-            }fdf
-        }
-        telemetry.addData("Detected Tag", detectedTag.id);
-        telemetry.addData("Distance (in)", dist);
-        telemetry.update();
-
-
-        waitForStart();
-        robot.forward((dist*2.54)-20, 500);
-        robot.left((strafe*2.54), 500);
 //        sleep(500);
 //        while(opModeIsActive()) {
 //

@@ -5,12 +5,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.robots.CardboardOne;
+import org.firstinspires.ftc.teamcode.robots.Jamal;
 
 @TeleOp(name = "Main TeleOp", group = "Main")
 public class MainTeleOp extends LinearOpMode {
 
-    CardboardOne robot;
+    Jamal robot;
     ElapsedTime loopTimer = new ElapsedTime();
 
     public enum ArmState {
@@ -24,15 +24,15 @@ public class MainTeleOp extends LinearOpMode {
     public static final double STRAIGHT_CORRECTION = 0.0;
 
     public void runOpMode() {
-        robot = new CardboardOne(this);
+        robot = new Jamal(this);
         robot.maxDrivePower = 0.9;
 
-        double horizontalSlidePos = CardboardOne.HORI_SLIDES_RETRACTED;
-        int verticalSlidePos = CardboardOne.VERT_SLIDES_BOTTOM;
+        double horizontalSlidePos = Jamal.HORI_SLIDES_RETRACTED;
+        int verticalSlidePos = Jamal.VERT_SLIDES_BOTTOM;
 
 
         robot.raiseSampleClaw();
-        robot.setSampleClawYawPos(CardboardOne.SAMPLE_CLAW_HORIZONTAL);
+        robot.setSampleClawYawPos(Jamal.SAMPLE_CLAW_HORIZONTAL);
         robot.closeSampleClaw();
         robot.retractHorizontalSlides();
 //        robot.openSpecimenClaw();
@@ -42,6 +42,9 @@ public class MainTeleOp extends LinearOpMode {
             loopTimer.reset();
             // TODO: univeral robot.update() method
 
+
+            // TODO: reorganize controls into methods
+            // TODO: add finite state machine so things don't break
             // intake
             if (gamepad1.right_bumper || ( (!(gamepad2.a || gamepad2.b) && gamepad2.right_bumper))) {
                 robot.closeSampleClaw();
@@ -74,7 +77,7 @@ public class MainTeleOp extends LinearOpMode {
 //            } else if (gamepad2.dpad_left) {
 //                horizontalSlidePos -= 0.005;
 //            }
-//            horizontalSlidePos = Range.clip(horizontalSlidePos, CardboardOne.HORI_SLIDES_EXTENDED, CardboardOne.HORI_SLIDES_RETRACTED);
+//            horizontalSlidePos = Range.clip(horizontalSlidePos, Jamal.HORI_SLIDES_EXTENDED, Jamal.HORI_SLIDES_RETRACTED);
 //            robot.setHorizontalSlidesPos(horizontalSlidePos);
 
             else if (gamepad2.b && gamepad2.x) {
@@ -85,9 +88,9 @@ public class MainTeleOp extends LinearOpMode {
             // vertical slides
             if (gamepad2.right_trigger > 0) verticalSlidePos += 10;
             else if (gamepad2.left_trigger > 0) verticalSlidePos -= 10;
-            if (gamepad2.x) verticalSlidePos = CardboardOne.VERT_SLIDES_ABOVE_TOP_TRUSS;
-            else if (gamepad2.y) verticalSlidePos = CardboardOne.VERT_SLIDES_BELOW_TOP_TRUSS;
-            else if (gamepad2.left_stick_button) verticalSlidePos = CardboardOne.VERT_SLIDES_PICKUP_SPECIMEN;
+            if (gamepad2.x) verticalSlidePos = Jamal.VERT_SLIDES_ABOVE_TOP_TRUSS;
+            else if (gamepad2.y) verticalSlidePos = Jamal.VERT_SLIDES_BELOW_TOP_TRUSS;
+            else if (gamepad2.left_stick_button) verticalSlidePos = Jamal.VERT_SLIDES_PICKUP_SPECIMEN;
 
             robot.setVerticalSlidesPos(verticalSlidePos);
 

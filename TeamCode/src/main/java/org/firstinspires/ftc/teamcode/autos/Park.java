@@ -4,17 +4,17 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.robots.CardboardOne;
+import org.firstinspires.ftc.teamcode.robots.Jamal;
 
 
 @Config
 @Autonomous(name = "Park Main Auto", group = "Main")
 public class Park extends LinearOpMode {
-    CardboardOne robot;
+    Jamal robot;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new CardboardOne(this);
+        robot = new Jamal(this);
 
 
         waitForStart();

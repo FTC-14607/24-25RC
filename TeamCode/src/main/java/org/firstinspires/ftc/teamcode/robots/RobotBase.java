@@ -109,5 +109,11 @@ public abstract class RobotBase {
     }
     // generally using floats, shorts, or bytes won't make much of a performance difference and I'm too lazy to add them
 
+    public static float clip(float num, float bound1, float bound2) {
+        float high, low;
+        if (bound1 < bound2) { low = bound1; high = bound2; }
+        else                 { low = bound2; high = bound2; }
+        return (num < low) ? low : Math.min(num, high);
+    }
 
 }

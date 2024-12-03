@@ -3,17 +3,15 @@ package org.firstinspires.ftc.teamcode.teleops;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.robots.CardboardOne;
+import org.firstinspires.ftc.teamcode.robots.Jamal;
 
 @TeleOp(name = "Acuatator Tester", group = "Main")
 public class ActuatorTester extends LinearOpMode {
 
-    CardboardOne robot;
+    Jamal robot;
     ElapsedTime loopTimer = new ElapsedTime();
 
     public enum ArmState {
@@ -27,7 +25,7 @@ public class ActuatorTester extends LinearOpMode {
     public static final double STRAIGHT_CORRECTION = 0.0;
 
     public void runOpMode() {
-        robot = new CardboardOne(this);
+        robot = new Jamal(this);
         double servoPos = 0;
         robot.maxDrivePower = 0.9;
         int slidePos = 0;

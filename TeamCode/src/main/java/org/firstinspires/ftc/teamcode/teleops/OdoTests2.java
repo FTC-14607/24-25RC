@@ -34,7 +34,7 @@ public class OdoTests2 extends LinearOpMode {
             if (gamepad1.a && gamepad1.b) robot.odoDriver.resetPose();
 
             if (gamepad1.atRest())
-                robot.odoDriver.lineToTarget();
+                robot.odoDriver.drive();
             else
                 moveDriveTrain(gamepad1);
 

@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.util.odometry.FTCLibThreeWheelOdometry;
 
 @Config
-public class CardboardOne extends MecanumDrive {
+public class Jamal extends MecanumDrive {
 
     // actuators and sensors
     public DcMotorEx vertSlideRight;
@@ -95,7 +95,7 @@ public class CardboardOne extends MecanumDrive {
     public static double SPECIMEN_CLAW_OPEN = 0;
 
 
-    public CardboardOne(LinearOpMode opmode) {
+    public Jamal(LinearOpMode opmode) {
         super(opmode);
 
         // connect to hardware
@@ -172,12 +172,13 @@ public class CardboardOne extends MecanumDrive {
     public double getSpecimenClawPos()     { return clawSpecimen   .getPosition(); }
 
     // TODO: maybe use Range.scale
-    public void setUpperArmPos        (double pos) { upperArm       .setPosition(Range.clip(pos, UPPER_ARM_RAISED, UPPER_ARM_LOWERED)); }
-    public void setDumperPos          (double pos) { dumper         .setPosition(Range.clip(pos, DUMPER_DOWN,        DUMPER_TOP        )); }
-    public void setSampleClawPos      (double pos) { clawSample     .setPosition(Range.clip(pos, SAMPLE_CLAW_CLOSED,   SAMPLE_CLAW_OPEN  )); }
-    public void setSampleClawYawPos   (double pos) { clawSampleYaw  .setPosition(Range.clip(pos, SAMPLE_CLAW_VERTICAL,SAMPLE_CLAW_VERTICAL_FLIPPED)); }
-    public void setSampleClawPitchPos (double pos) { clawSamplePitch.setPosition(Range.clip(pos, SAMPLE_CLAW_DOWN,     SAMPLE_CLAW_UP    )); }
-    public void setSpecimenClawPos    (double pos) { clawSpecimen   .setPosition(Range.clip(pos, SPECIMEN_CLAW_OPEN, SPECIMEN_CLAW_CLOSED)); }
+    // TODO: make it so it doesnt matter which order you clip (bc the min has to be first)
+    public void setUpperArmPos        (double pos) { upperArm       .setPosition(clip(pos, UPPER_ARM_RAISED, UPPER_ARM_LOWERED)); }
+    public void setDumperPos          (double pos) { dumper         .setPosition(clip(pos, DUMPER_DOWN,        DUMPER_TOP        )); }
+    public void setSampleClawPos      (double pos) { clawSample     .setPosition(clip(pos, SAMPLE_CLAW_CLOSED,   SAMPLE_CLAW_OPEN  )); }
+    public void setSampleClawYawPos   (double pos) { clawSampleYaw  .setPosition(clip(pos, SAMPLE_CLAW_VERTICAL,SAMPLE_CLAW_VERTICAL_FLIPPED)); }
+    public void setSampleClawPitchPos (double pos) { clawSamplePitch.setPosition(clip(pos, SAMPLE_CLAW_DOWN,     SAMPLE_CLAW_UP    )); }
+    public void setSpecimenClawPos    (double pos) { clawSpecimen   .setPosition(clip(pos, SPECIMEN_CLAW_OPEN, SPECIMEN_CLAW_CLOSED)); }
 
     public void raiseArm()                { setUpperArmAndDumperPos(UPPER_ARM_RAISED); }
     public void lowerArm()                { setUpperArmAndDumperPos(UPPER_ARM_LOWERED); }
@@ -230,6 +231,7 @@ public class CardboardOne extends MecanumDrive {
      * @param pos [ticks]
      */
     public void setVerticalSlidesPos(int pos) {
+        // TODO: PIDF - find F, also use external PID
         int currentPos = getVerticalSlidePos();
         pos = Range.clip(pos, VERT_SLIDES_BOTTOM, VERT_SLIDES_TOP);
 
@@ -277,6 +279,7 @@ public class CardboardOne extends MecanumDrive {
      * @param displacement (inches, inches degrees)
      */
     public void moveBy(Pose2d displacement, double holdTime) {
+        // TODO
         // read starting values
         updatePose();
         Pose2d firstPose = currentPose;
