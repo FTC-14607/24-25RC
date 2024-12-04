@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.util.odometry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
-import com.arcrobotics.ftclib.geometry.Transform2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -13,7 +12,7 @@ import org.firstinspires.ftc.teamcode.robots.DriveTrain;
 /**
  * Drives a mecanum drivetrain robot to given positions using a 3-wheel odometry localizer.
  */
-public class MecanumThreeWheelOdometryDriver implements OdometryDriver {
+public class MecanumThreeWheelOdometryDriver implements AutoDriver {
 
     // connection to hardware
     private final RobotLocalizer odo;
@@ -60,6 +59,11 @@ public class MecanumThreeWheelOdometryDriver implements OdometryDriver {
     public void setControllers(PIDController trans, PIDController yaw) {
         translationController = trans;
         yawController = yaw;
+    }
+
+    public void setTolerances(double transTol, double yawTol) {
+        translationController.setTolerance(transTol);
+        yawController.setTolerance(yawTol);
     }
 
     public void setHoldTargetDuration(double duration) { holdTargetDuration = duration; }

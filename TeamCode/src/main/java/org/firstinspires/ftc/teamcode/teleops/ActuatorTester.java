@@ -6,12 +6,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.robots.Jamal;
+import org.firstinspires.ftc.teamcode.robots.JamalOne;
 
 @TeleOp(name = "Acuatator Tester", group = "Main")
 public class ActuatorTester extends LinearOpMode {
 
-    Jamal robot;
+    JamalOne robot;
     ElapsedTime loopTimer = new ElapsedTime();
 
     public enum ArmState {
@@ -25,7 +25,7 @@ public class ActuatorTester extends LinearOpMode {
     public static final double STRAIGHT_CORRECTION = 0.0;
 
     public void runOpMode() {
-        robot = new Jamal(this);
+        robot = new JamalOne(this);
         double servoPos = 0;
         robot.maxDrivePower = 0.9;
         int slidePos = 0;

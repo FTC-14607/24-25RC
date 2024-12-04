@@ -6,7 +6,7 @@ import com.arcrobotics.ftclib.geometry.Pose2d;
 /**
  * Drives a robot to given positions using a localizer.
  */
-public interface OdometryDriver {
+public interface AutoDriver {
 
     enum DriveMode { MANUAL, DRIVE_TO_TARGET }
 
@@ -15,6 +15,7 @@ public interface OdometryDriver {
     void updatePose();
 
     void setControllers(PIDController translation, PIDController yaw);
+    void setTolerances(double transTol, double yawTol);
     void setHoldTargetDuration(double duration);
     void setDriveMode(DriveMode mode);
     void setTarget(Pose2d target);

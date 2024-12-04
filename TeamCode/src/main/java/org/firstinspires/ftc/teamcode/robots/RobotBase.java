@@ -58,26 +58,6 @@ public abstract class RobotBase {
     }
 
     /**
-     * Sets all the motors in motors[] to the passed run mode
-     * @param motors drivetrain or slides
-     * @param mode DcMotorEx.RunMode
-     */
-    public void setRunMode(DcMotor[] motors, DcMotor.RunMode mode) {
-        for (DcMotor motor : motors)
-            motor.setMode(mode);
-    }
-
-    public void setZeroPowerBehavior(DcMotor[] motors, DcMotor.ZeroPowerBehavior behavior) {
-        for (DcMotor motor : motors)
-            motor.setZeroPowerBehavior(behavior);
-    }
-
-    public void setDirection(DcMotor[] motors, DcMotorSimple.Direction direction) {
-        for (DcMotor motor : motors)
-            motor.setDirection(direction);
-    }
-
-    /**
      * Decreases power to emulate behavior when the robot is using an exactly 12V battery. Typically
      * healthy batteries charge to 14V, so to keep behavior consistent power should be scaled. Note
      * this uses the voltage read upon initialization, and does not re-read hub voltage. If voltage
@@ -88,6 +68,29 @@ public abstract class RobotBase {
     public double scalePower(double motorPower) {
         return motorPower * voltageScaler;
     }
+
+    /**
+     * Sets all the motors in motors[] to the passed run mode
+     * @param motors drivetrain or slides
+     * @param mode DcMotorEx.RunMode
+     */
+    public static void setRunMode(DcMotor[] motors, DcMotor.RunMode mode) {
+        for (DcMotor motor : motors)
+            motor.setMode(mode);
+    }
+
+    public static void setZeroPowerBehavior(DcMotor[] motors, DcMotor.ZeroPowerBehavior behavior) {
+        for (DcMotor motor : motors)
+            motor.setZeroPowerBehavior(behavior);
+    }
+
+    public static void setDirection(DcMotor[] motors, DcMotorSimple.Direction direction) {
+        for (DcMotor motor : motors)
+            motor.setDirection(direction);
+    }
+
+    public static double centimetersToInches(double centimeters) { return centimeters / 2.54; }
+    public static double inchesToCentimeters(double inches) { return inches * 2.54; }
 
     /**
      * Range.clip except high/low bound order doesn't matter

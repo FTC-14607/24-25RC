@@ -1,10 +1,16 @@
 package org.firstinspires.ftc.teamcode.util.odometry;
 
 import com.acmerobotics.roadrunner.util.NanoClock;
+import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.teamcode.util.roadrunner.util.Encoder;
+
+/**
+ * Mostly copied from org.firstinspires.ftc.teamcode.util.roadrunner.util.Encoder
+ */
 public class MotorEncoder {
     private final static int CPS_STEP = 0x10000;
 

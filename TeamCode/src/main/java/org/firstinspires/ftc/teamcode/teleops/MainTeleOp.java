@@ -5,12 +5,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.robots.Jamal;
+import org.firstinspires.ftc.teamcode.robots.JamalOne;
 
 @TeleOp(name = "Main TeleOp", group = "Main")
 public class MainTeleOp extends LinearOpMode {
 
-    Jamal robot;
+    JamalOne robot;
     ElapsedTime loopTimer = new ElapsedTime();
 
     public enum ArmState {
@@ -24,15 +24,15 @@ public class MainTeleOp extends LinearOpMode {
     public static final double STRAIGHT_CORRECTION = 0.0;
 
     public void runOpMode() {
-        robot = new Jamal(this);
+        robot = new JamalOne(this);
         robot.maxDrivePower = 0.9;
 
-        double horizontalSlidePos = Jamal.HORI_SLIDES_RETRACTED;
-        int verticalSlidePos = Jamal.VERT_SLIDES_BOTTOM;
+        double horizontalSlidePos = JamalOne.HORI_SLIDES_RETRACTED;
+        int verticalSlidePos = JamalOne.VERT_SLIDES_BOTTOM;
 
 
         robot.raiseSampleClaw();
-        robot.setSampleClawYawPos(Jamal.SAMPLE_CLAW_HORIZONTAL);
+        robot.setSampleClawYawPos(JamalOne.SAMPLE_CLAW_HORIZONTAL);
         robot.closeSampleClaw();
         robot.retractHorizontalSlides();
 //        robot.openSpecimenClaw();
@@ -88,9 +88,9 @@ public class MainTeleOp extends LinearOpMode {
             // vertical slides
             if (gamepad2.right_trigger > 0) verticalSlidePos += 10;
             else if (gamepad2.left_trigger > 0) verticalSlidePos -= 10;
-            if (gamepad2.x) verticalSlidePos = Jamal.VERT_SLIDES_ABOVE_TOP_TRUSS;
-            else if (gamepad2.y) verticalSlidePos = Jamal.VERT_SLIDES_BELOW_TOP_TRUSS;
-            else if (gamepad2.left_stick_button) verticalSlidePos = Jamal.VERT_SLIDES_PICKUP_SPECIMEN;
+            if (gamepad2.x) verticalSlidePos = JamalOne.VERT_SLIDES_ABOVE_TOP_TRUSS;
+            else if (gamepad2.y) verticalSlidePos = JamalOne.VERT_SLIDES_BELOW_TOP_TRUSS;
+            else if (gamepad2.left_stick_button) verticalSlidePos = JamalOne.VERT_SLIDES_PICKUP_SPECIMEN;
 
             robot.setVerticalSlidesPos(verticalSlidePos);
 
@@ -112,6 +112,13 @@ public class MainTeleOp extends LinearOpMode {
                 telemetry.update();
             }
         }
+
+//        telemetry.addAction()
+        telemetry.speak("only in Ohio do Sigmas fanum tax skibidi gyatts");
+
+        telemetry.addLine("wow");
+        telemetry.update();
+        sleep(5000);
     }
 
     public void moveDriveTrain(Gamepad gamepad) {

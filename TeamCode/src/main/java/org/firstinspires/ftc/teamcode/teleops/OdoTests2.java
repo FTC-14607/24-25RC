@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.robots.Outreach;
-import org.firstinspires.ftc.teamcode.util.odometry.OdometryDriver;
 
 @Config
 @TeleOp(name = "Odometry Test 2", group = "Test")

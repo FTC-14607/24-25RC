@@ -3,16 +3,12 @@ package org.firstinspires.ftc.teamcode.robots;
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Rotation2d;
-import com.arcrobotics.ftclib.geometry.Transform2d;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.util.odometry.FTCLibThreeWheelOdometry;
+import org.firstinspires.ftc.teamcode.util.odometry.ThreeWheelOdometry;
 import org.firstinspires.ftc.teamcode.util.odometry.MecanumThreeWheelOdometryDriver;
 import org.firstinspires.ftc.teamcode.util.odometry.MotorEncoder;
-import org.firstinspires.ftc.teamcode.util.odometry.OdometryDriver;
+import org.firstinspires.ftc.teamcode.util.odometry.AutoDriver;
 
 @Config
 public class Outreach extends MecanumDrive {
@@ -30,8 +26,8 @@ public class Outreach extends MecanumDrive {
     public static double p_trans = 0.05, i_trans = 0.04, d_trans = 0;
     public static double tol_trans = 0.25; // quarter inch
     public PIDController translationController; // takes inches, outputs power
-    public FTCLibThreeWheelOdometry odo;
-    public OdometryDriver odoDriver;
+    public ThreeWheelOdometry odo;
+    public AutoDriver odoDriver;
 
     // physical constants
     public final static double TRACK_WIDTH = 8.2087;        // 20.85 cm
@@ -63,7 +59,7 @@ public class Outreach extends MecanumDrive {
         odoLeft.setDirection(MotorEncoder.Direction.REVERSE);
 //        odoPerp.setDirection(MotorEncoder.Direction.REVERSE);
 
-        odo = new FTCLibThreeWheelOdometry(
+        odo = new ThreeWheelOdometry(
                 odoLeft, odoRight, odoPerp,
                 TRACK_WIDTH, CENTER_WHEEL_OFFSET, ODO_TICKS_PER_ROTATION, ODO_WHEEL_DIAMETER);
 

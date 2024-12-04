@@ -13,10 +13,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.util.odometry.FTCLibThreeWheelOdometry;
+import org.firstinspires.ftc.teamcode.util.odometry.ThreeWheelOdometry;
 
 @Config
-public class Jamal extends MecanumDrive {
+public class JamalOne extends MecanumDrive {
 
     // actuators and sensors
     public DcMotorEx vertSlideRight;
@@ -37,7 +37,7 @@ public class Jamal extends MecanumDrive {
     public MotorEx odoRight;
     public MotorEx odoLeft;
     public MotorEx odoPerp;
-    public FTCLibThreeWheelOdometry odo;
+    public ThreeWheelOdometry odo;
 
     // controllers
     public static double tP = 0.025, tI = 0, tD = 0, tF = 0;
@@ -95,7 +95,7 @@ public class Jamal extends MecanumDrive {
     public static double SPECIMEN_CLAW_OPEN = 0;
 
 
-    public Jamal(LinearOpMode opmode) {
+    public JamalOne(LinearOpMode opmode) {
         super(opmode);
 
         // connect to hardware

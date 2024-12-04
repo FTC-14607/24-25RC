@@ -7,7 +7,7 @@ import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 /**
  * Three-wheel odometry based localizer. Wraps FTCLib's odometry classes.
  */
-public class FTCLibThreeWheelOdometry implements RobotLocalizer {
+public class ThreeWheelOdometry implements RobotLocalizer {
 
     private final MotorEncoder encoderLeft, encoderRight, encoderPerp;
     private final double inchesPerTick;
@@ -25,7 +25,7 @@ public class FTCLibThreeWheelOdometry implements RobotLocalizer {
      * @param ticksPerRotation [ticks] encoder ticks per rotation
      * @param wheelDiameter [inches] diameter of odometry wheels
      */
-    public FTCLibThreeWheelOdometry(
+    public ThreeWheelOdometry(
             MotorEncoder encoderLeft, MotorEncoder encoderRight, MotorEncoder encoderPerp,
             double trackWidth, double centerWheelOffset, double ticksPerRotation, double wheelDiameter
     ) {
@@ -47,6 +47,7 @@ public class FTCLibThreeWheelOdometry implements RobotLocalizer {
         return ticks * inchesPerTick;
     }
 
+    @Override
     public void reset() {
         encoderLeft.resetPosition();
         encoderRight.resetPosition();
@@ -54,20 +55,24 @@ public class FTCLibThreeWheelOdometry implements RobotLocalizer {
         update();
     }
 
+    @Override
     public void update(){
         odometry.update();
     }
 
+    @Override
     public Pose2d getPose(){
         return odometry.getPose();
     }
 
     // TODO: all these vv
+    @Override
     public Pose2d getVelocity() {
 
         return null;
     }
 
+    @Override
     public Pose2d getAcceleration() {
         return null;
     }
