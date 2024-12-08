@@ -25,7 +25,8 @@ public class JamalTwo extends MecanumDrive {
     // * drivetrain: goBILDA 96mm Mecanum Wheels and goBILDA 5203 312 RPM Motors
     public DcMotorEx    upperSlideRight; // goBILDA 5203 312 RPM
     public DcMotorEx    upperSlideLeft;  // same
-    public Servo        upperArm;        // Axon Mini
+    public Servo        upperArmRight;   // Axon Mini
+    public Servo        upperArmLeft;    // same
     public Servo        upperClaw;       // goBILDA Torque
     public Servo        upperClawPitch;  // same
 
@@ -73,11 +74,11 @@ public class JamalTwo extends MecanumDrive {
     public static double VERT_SLIDES_DEFAULT_SPEED = 100;
     public static double VERT_SLIDES_INCHES_TO_TICKS = -1;
 
-    public static double UPPER_ARM_LOWERED = 0.6; // servo position [0, 1]
-    public static double UPPER_ARM_RAISED = 0;
+    public static double UPPER_ARM_LOWERED = 0; // servo position [0, 1]
+    public static double UPPER_ARM_RAISED = 1;
 
-    public static double UPPER_CLAW_CLOSED = 0.1;
-    public static double UPPER_CLAW_OPEN = 0;
+    public static double UPPER_CLAW_CLOSED = 0.862;
+    public static double UPPER_CLAW_OPEN = 0.735;
     public static double UPPER_CLAW_DOWN = 0;
     public static double UPPER_CLAW_UP = 1;
     public static double UPPER_CLAW_SCORE_SPECIMEN = 0.5;
@@ -109,29 +110,32 @@ public class JamalTwo extends MecanumDrive {
         STRAFE_ROTATION_CORRECTION = 0;
 
         // connect to hardware
-        upperSlideRight = hardwareMap.get(DcMotorEx.class, "vertSlideRight");
-        upperSlideLeft  = hardwareMap.get(DcMotorEx.class, "vertSlideLeft");
-        upperArm        = hardwareMap.get(Servo.class,     "upperArm");
-        upperClaw       = hardwareMap.get(Servo.class,     "clawSpecimen");
-        upperClawPitch  = hardwareMap.get(Servo.class,     "dumper");
+        upperSlideRight = hardwareMap.get(DcMotorEx.class, "upperSlideRight");
+        upperSlideLeft  = hardwareMap.get(DcMotorEx.class, "upperSlideLeft");
+        upperArmRight   = hardwareMap.get(Servo.class,     "upperArmRight");
+        upperArmLeft    = hardwareMap.get(Servo.class,     "upperArmLeft");
+        upperClaw       = hardwareMap.get(Servo.class,     "upperClaw");
+        upperClawPitch  = hardwareMap.get(Servo.class,     "upperClawPitch");
 
-        lowerSlideRight = hardwareMap.get(Servo.class,     "horiSlideRight");
-        lowerSlideLeft  = hardwareMap.get(Servo.class,     "horiSlideLeft");
-        lowerClaw       = hardwareMap.get(Servo.class,     "clawSample");
-        lowerClawYaw    = hardwareMap.get(Servo.class,     "clawSampleYaw");
-        lowerClawPitch  = hardwareMap.get(Servo.class,     "clawSamplePitch");
+        lowerSlideRight = hardwareMap.get(Servo.class,     "lowerSlideRight");
+        lowerSlideLeft  = hardwareMap.get(Servo.class,     "lowerSlideLeft");
+        lowerClaw       = hardwareMap.get(Servo.class,     "lowerClaw");
+        lowerClawYaw    = hardwareMap.get(Servo.class,     "lowerClawYaw");
+        lowerClawPitch  = hardwareMap.get(Servo.class,     "lowerClawPitch");
 
-//        odoRight = new MotorEncoder(frontLeft); // encoders are plugged in next to motors
-//        odoLeft =  new MotorEncoder(backRight);
-//        odoPerp =  new MotorEncoder(frontRight);
+        odoRight = new MotorEncoder(frontLeft); // encoders are plugged in next to motors
+        odoLeft =  new MotorEncoder(backRight);
+        odoPerp =  new MotorEncoder(frontRight);
 
         // initialization and setup
         upperSlides = new DcMotorEx[] {upperSlideRight, upperSlideLeft};
         lowerSlides = new Servo[] {lowerSlideRight, lowerSlideLeft};
 
         upperSlideLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        upperArmRight.setDirection(Servo.Direction.REVERSE);
 //        upperClawPitch.setDirection(Servo.Direction.REVERSE);
         lowerSlideRight.setDirection(Servo.Direction.REVERSE);
+
         odoLeft.setDirection(MotorEncoder.Direction.REVERSE);
 //        odoPerp.setDirection(MotorEncoder.Direction.REVERSE);
 
@@ -173,7 +177,7 @@ public class JamalTwo extends MecanumDrive {
 
     // -------------------------------------- INTERACTORS ------------------------------------------
 
-    public double getUpperArmPos()         { return upperArm       .getPosition(); }
+    public double getUpperArmPos()         { return upperArmRight.getPosition(); }
     public double getUpperClawPos()     { return upperClaw.getPosition(); }
     public double getUpperClawPitchPos()           { return upperClawPitch.getPosition(); }
     public double getLowerClawPos()       { return lowerClaw.getPosition(); }
@@ -181,7 +185,6 @@ public class JamalTwo extends MecanumDrive {
     public double getLowerClawPitchPos()  { return lowerClawPitch.getPosition(); }
 
     // TODO: maybe use Range.scale
-    public void setUpperArmPos        (double pos) { upperArm       .setPosition(clip(pos, UPPER_ARM_RAISED, UPPER_ARM_LOWERED)); }
     public void setUpperClawPos(double pos) { upperClaw.setPosition(clip(pos, UPPER_CLAW_OPEN, UPPER_CLAW_CLOSED)); }
     public void setUpperClawPitchPos(double pos) { upperClawPitch.setPosition(clip(pos, UPPER_CLAW_DOWN, UPPER_CLAW_UP)); }
     public void setLowerClawPos(double pos) { lowerClaw.setPosition(clip(pos, LOWER_CLAW_CLOSED, LOWER_CLAW_OPEN)); }
@@ -202,6 +205,12 @@ public class JamalTwo extends MecanumDrive {
     public void openUpperClaw()        {  setUpperClawPos(UPPER_CLAW_OPEN); }
 
     public double getHorizontalSlidesPos() { return lowerSlideLeft.getPosition(); }
+
+    public void setUpperArmPos(double pos) {
+        upperArmRight.setPosition(clip(pos, UPPER_ARM_RAISED, UPPER_ARM_LOWERED));
+        upperArmLeft.setPosition(clip(pos, UPPER_ARM_RAISED, UPPER_ARM_LOWERED));
+    }
+
 
     public void setHorizontalSlidesPos(double pos) {
         pos = clip(pos, LOWER_SLIDES_EXTENDED, LOWER_SLIDES_RETRACTED);
@@ -263,7 +272,7 @@ public class JamalTwo extends MecanumDrive {
         double dumperPos = getUpperClawPitchPos();
         double posChange = setPos - currentPos;
 
-        upperArm.setPosition(setPos);
+        upperArmRight.setPosition(setPos);
         setUpperClawPitchPos(dumperPos - posChange);  // dumper rotates the opposite way by the same amount
     }
 

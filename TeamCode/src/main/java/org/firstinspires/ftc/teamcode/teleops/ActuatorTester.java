@@ -6,12 +6,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.robots.JamalOne;
+import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 
 @TeleOp(name = "Acuatator Tester", group = "Main")
 public class ActuatorTester extends LinearOpMode {
 
-    JamalOne robot;
+    JamalTwo robot;
     ElapsedTime loopTimer = new ElapsedTime();
 
     public enum ArmState {
@@ -25,29 +25,25 @@ public class ActuatorTester extends LinearOpMode {
     public static final double STRAIGHT_CORRECTION = 0.0;
 
     public void runOpMode() {
-        robot = new JamalOne(this);
+        robot = new JamalTwo(this);
         double servoPos = 0;
         robot.maxDrivePower = 0.9;
         int slidePos = 0;
-
-//        robot.closeSampleClaw();
-//        robot.raiseSampleClaw();
-//        robot.lowerArm();
 
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
 
-            if (gamepad2.right_trigger > 0) servoPos += 0.001;
-            else if (gamepad2.left_trigger > 0) servoPos -= 0.001;
+            if      (gamepad2.right_trigger > 0) servoPos = Math.min(1, servoPos + 0.001);
+            else if (gamepad2.left_trigger  > 0) servoPos = Math.max(0, servoPos - 0.001);
 
             if (gamepad2.a) {
                 if (gamepad2.dpad_down) {
-                    robot.setRunMode(robot.vertSlides, DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    JamalTwo.setRunMode(robot.upperSlides, DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 } else if (gamepad2.right_trigger > 0) {
                     slidePos += 1;
                 } else if (gamepad2.left_trigger > 0) {
-                    slidePos -= 1;
+                    slidePos = Math.max(0, slidePos - 1);
                 }
 
                 robot.setVerticalSlidesPos(slidePos);
@@ -55,9 +51,9 @@ public class ActuatorTester extends LinearOpMode {
 
             else if (gamepad2.b) {
                 if (gamepad2.dpad_up) {
-                    robot.horiSlideRight.setPosition(servoPos);
+                    robot.lowerSlideRight.setPosition(servoPos);
                 } else if (gamepad2.dpad_right) {
-                    robot.horiSlideLeft.setPosition(servoPos);
+                    robot.lowerSlideLeft.setPosition(servoPos);
                 } else if (gamepad2.dpad_left) {
                     robot.setHorizontalSlidesPos(servoPos);
                 }
@@ -66,49 +62,40 @@ public class ActuatorTester extends LinearOpMode {
 
             else if (gamepad2.y) {
                 if (gamepad2.dpad_up) {
-
+                    robot.upperClaw.setPosition(servoPos);
                 } else if (gamepad2.dpad_left) {
-                    robot.setUpperArmPos(servoPos);
+                    robot.upperArmRight.setPosition(servoPos);
+                } else if (gamepad2.dpad_down) {
+                    robot.upperArmLeft.setPosition(servoPos);
+                } else if (gamepad2.dpad_right) {
+                    robot.upperClawPitch.setPosition(servoPos);
                 }
             }
 
             else if (gamepad2.x) {
-                if (gamepad2.dpad_up) {
-
-                } else if (gamepad2.dpad_left) {
-                    robot.setDumperPos(servoPos);
-                }
-            }
-
-            else if (gamepad2.right_bumper) {
 
                 if (gamepad2.dpad_up) {
-                    robot.setSampleClawPos(servoPos);
+                    robot.lowerClaw.setPosition(servoPos);
                 } else if (gamepad2.dpad_left) {
-                    robot.setSampleClawYawPos(servoPos);
+                    robot.lowerClawYaw.setPosition(servoPos);
                 } else if (gamepad2.dpad_down) {
-                    robot.setSampleClawPitchPos(servoPos);
-                }
-            }
-
-            else if (gamepad2.left_bumper) {
-                if (gamepad2.dpad_left) {
-                    robot.setSpecimenClawPos(servoPos);
+                    robot.lowerClawPitch.setPosition(servoPos);
                 }
             }
 
             moveDriveTrain(gamepad1);
 
             telemetry.addData("servoPos", servoPos);
+            telemetry.addData("slidePos", slidePos);
 
             telemetry.addData("Vertical Slide Position", robot.getVerticalSlidePos());
-            telemetry.addData("Upper Arm Position", robot.getUpperArmPos());
-            telemetry.addData("Dumper Position", robot.getDumperPos());
             telemetry.addData("Horizontal Slide Position", robot.getHorizontalSlidesPos());
-            telemetry.addData("Sample Claw Position", robot.getSampleClawPos());
-            telemetry.addData("Sample Claw Yaw Posiition", robot.getSampleClawYawPos());
-            telemetry.addData("Sample Claw Pitch Position", robot.getSampleClawPitchPos());
-            telemetry.addData("Specimen Claw Position", robot.getSpecimenClawPos());
+            telemetry.addData("Upper Arm Position", robot.getUpperArmPos());
+            telemetry.addData("Upper Claw Position", robot.getUpperClawPos());
+            telemetry.addData("Upper Claw Pitch Position", robot.getUpperClawPitchPos());
+            telemetry.addData("Lower Claw Position", robot.getLowerClawPos());
+            telemetry.addData("Lower Claw Yaw Posiition", robot.getLowerClawYawPos());
+            telemetry.addData("Lower Claw Pitch Position", robot.getLowerClawPitchPos());
 
             telemetry.addData("Max Drive Power", robot.maxDrivePower);
             telemetry.addData("Loop Speed", "%5.2f ms", loopTimer.time() * 1000);
