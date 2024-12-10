@@ -1,45 +1,72 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
+import android.icu.text.CaseMap;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robots.JamalOne;
+import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 
 @TeleOp(name = "Main TeleOp", group = "Main")
 public class MainTeleOp extends LinearOpMode {
 
-    JamalOne robot;
+    JamalTwo robot;
     ElapsedTime loopTimer = new ElapsedTime();
 
-    public enum ArmState {
-        RETRACTED,
-        EXTENDING_HORIZONTAL,
-        EXTENDING_VERTICAL
+    public enum LowerSystemState {
+        INIT,
+        TRANSFERRING,
+        INTAKING_SAMPLE,
     }
 
-    public ArmState armState = ArmState.RETRACTED;
+    public enum UpperSystemState {
+        INIT,
+        TRANSFERRING,
+        INTAKING_SPECIMEN,
+        OUTTAKING_SAMPLE,
+        OUTTAKING_SPECIMEN,
+        ASCENDING,
+    }
+
+    public LowerSystemState lowerSystemState = LowerSystemState.INIT;
+    public UpperSystemState upperSystemState = UpperSystemState.INIT;
+
+    public ElapsedTime lowerTimer = new ElapsedTime();
+    public ElapsedTime upperTimer = new ElapsedTime();
 
     public static final double STRAIGHT_CORRECTION = 0.0;
 
     public void runOpMode() {
-        robot = new JamalOne(this);
+        robot = new JamalTwo(this);
         robot.maxDrivePower = 0.9;
 
-        double horizontalSlidePos = JamalOne.HORI_SLIDES_RETRACTED;
-        int verticalSlidePos = JamalOne.VERT_SLIDES_BOTTOM;
+        double horizontalSlidePos = JamalTwo.LOWER_SLIDES_RETRACTED;
+        int verticalSlidePos = JamalTwo.UPPER_SLIDES_BOTTOM;
 
 
-        robot.raiseSampleClaw();
-        robot.setSampleClawYawPos(JamalOne.SAMPLE_CLAW_HORIZONTAL);
-        robot.closeSampleClaw();
-        robot.retractHorizontalSlides();
+//        robot.raiseSampleClaw();
+//        robot.setSampleClawYawPos(JamalOne.SAMPLE_CLAW_HORIZONTAL);
+//        robot.closeSampleClaw();
+//        robot.retractHorizontalSlides();
 //        robot.openSpecimenClaw();
 
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
+
+            switch (lowerSystemState) {
+                case INIT:
+                    break;
+                case TRANSFERRING:
+                    break;
+            }
+
+            switch (upperSystemState) {
+
+            }
             // TODO: univeral robot.update() method
 
 
@@ -119,6 +146,14 @@ public class MainTeleOp extends LinearOpMode {
         telemetry.addLine("wow");
         telemetry.update();
         sleep(5000);
+    }
+
+    public void moveLowerSlides() {
+
+    }
+
+    public void moveUpperSlides() {
+
     }
 
     public void moveDriveTrain(Gamepad gamepad) {

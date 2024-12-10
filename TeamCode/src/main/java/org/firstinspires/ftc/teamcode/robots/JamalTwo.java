@@ -55,7 +55,8 @@ public class JamalTwo extends MecanumDrive {
     public static double p_sli = 0, i_sli = 0, d_sli = 0;
     public static double f_sli = 0.3; // TODO: tune this
 
-    public static PIDFCoefficients upperSlidesPIDFCoefficients;
+    public static PIDFCoefficients upperSlideVelocityPIDFCoefficients  = new PIDFCoefficients(1,0,0,0.5);
+    public static PIDFCoefficients upperSlidesPositionPIDFCoefficients = new PIDFCoefficients(1,0,0,0); // only p matters for position
 
     // telemetry
     public static Pose2d currentPose;
@@ -154,6 +155,11 @@ public class JamalTwo extends MecanumDrive {
 
         yawController = new PIDController(yaw_P, yaw_I, yaw_D);
         yawController.setTolerance(yaw_Tol);
+
+        for (DcMotorEx slide : upperSlides) {
+            slide.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, upperSlideVelocityPIDFCoefficients);
+            slide.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION,   upperSlidesPositionPIDFCoefficients);
+        }
 
         autoDriver = new MecanumThreeWheelOdometryDriver(odo, this, opMode, translationController, yawController);
 
