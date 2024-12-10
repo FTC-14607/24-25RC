@@ -42,7 +42,7 @@ public class JamalTwo extends MecanumDrive {
 
     // control
     public DcMotorEx[]  upperSlides;
-    public Servo[] lowerSlides;
+    public Servo[]      lowerSlides;
 
     public AutoDriver autoDriver;
     public RobotLocalizer odo;
