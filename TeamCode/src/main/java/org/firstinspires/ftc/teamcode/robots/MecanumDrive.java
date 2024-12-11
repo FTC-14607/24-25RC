@@ -122,6 +122,8 @@ public abstract class MecanumDrive extends RobotBase implements DriveTrain { // 
      */
     public double[] drive(double throttle, double strafe, double rotate) {
         strafe *= STRAFE_MULTIPLIER;
+
+        // TODO: setup corrections
         rotate += throttle * STRAIGHT_ROTATION_CORRECTION + strafe * STRAIGHT_ROTATION_CORRECTION;
 
         double fRPower = throttle - strafe - rotate;

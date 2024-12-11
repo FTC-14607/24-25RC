@@ -72,6 +72,7 @@ public class JamalTwo extends MecanumDrive {
     public static int UPPER_SLIDES_ABOVE_HIGH_CHAMBER = 3050;
     public static int UPPER_SLIDES_BELOW_HIGH_CHAMBER = 2075;
     public static int UPPER_SLIDES_PICKUP_SPECIMEN = 750;
+    public static int UPPER_SLIDES_DEPOSIT_SAMPLE = 4000;
     public static double VERT_SLIDES_DEFAULT_SPEED = 100;
     public static double VERT_SLIDES_INCHES_TO_TICKS = -1;
 
@@ -142,6 +143,9 @@ public class JamalTwo extends MecanumDrive {
 
         setZeroPowerBehavior(upperSlides, DcMotor.ZeroPowerBehavior.BRAKE); // TODO: experiment with this
 //        setRunMode(vertSlides, DcMotor.RunMode.RUN_TO_POSITION);
+
+        // TODO: internal servo scaling
+//        upperClaw.scaleRange(UPPER_CLAW_CLOSED, UPPER_CLAW_OPEN); //
 
         imu.resetYaw();
 
