@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
-import android.icu.text.CaseMap;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -119,7 +117,7 @@ public class MainTeleOp extends LinearOpMode {
             else if (gamepad2.y) verticalSlidePos = JamalOne.VERT_SLIDES_BELOW_TOP_TRUSS;
             else if (gamepad2.left_stick_button) verticalSlidePos = JamalOne.VERT_SLIDES_PICKUP_SPECIMEN;
 
-            robot.setVerticalSlidesPos(verticalSlidePos);
+            robot.setUpperSlidesPos(verticalSlidePos);
 
             moveDriveTrain(gamepad1);
 

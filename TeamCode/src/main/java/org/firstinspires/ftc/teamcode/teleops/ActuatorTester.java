@@ -46,7 +46,7 @@ public class ActuatorTester extends LinearOpMode {
                     slidePos = Math.max(0, slidePos - 1);
                 }
 
-                robot.setVerticalSlidesPos(slidePos);
+                robot.setUpperSlidesPos(slidePos);
             }
 
             else if (gamepad2.b) {

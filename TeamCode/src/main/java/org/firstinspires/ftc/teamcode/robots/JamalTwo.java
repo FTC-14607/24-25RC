@@ -235,7 +235,7 @@ public class JamalTwo extends MecanumDrive {
     /**
      * @param velocity [ticks/sec], positive is up
      */
-    public void setVerticalSlidesVelocity(double velocity) { // ticks/s
+    public void setUpperSlidesVelocity(double velocity) { // ticks/s
         int currentPos = getVerticalSlidePos();
 
         // prevent exceeding slide limits
@@ -253,7 +253,7 @@ public class JamalTwo extends MecanumDrive {
     /**
      * @param pos [ticks]
      */
-    public void setVerticalSlidesPos(int pos) {
+    public void setUppermucSlidesPos(int pos) {
         // TODO: PIDF - find F, also use external PID
         int currentPos = getVerticalSlidePos();
         pos = Range.clip(pos, UPPER_SLIDES_BOTTOM, UPPER_SLIDES_TOP);
@@ -263,7 +263,7 @@ public class JamalTwo extends MecanumDrive {
             slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // TODO: test this
-            slide.setPower( (pos >= getVerticalSlidePos()) ? 0.8 : 0.5);
+            slide.setPower(0.9);
 //            slide.setVelocity( (pos > currentPos) ? VERT_SLIDES_DEFAULT_SPEED : 0.8*VERT_SLIDES_DEFAULT_SPEED);
         }
     }
