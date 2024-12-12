@@ -4,12 +4,11 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 
-@TeleOp(name = "Slide Tester", group = "Main")
+@TeleOp(name = "Slide Tester", group = "Test")
 public class SlideTester extends LinearOpMode {
 
     JamalTwo robot;
@@ -54,15 +53,15 @@ public class SlideTester extends LinearOpMode {
                 slideVelo -= 1;
 
             if      (gamepad1.a)
-                robot.setVerticalSlidesPos(slidePos);
+                robot.setUpperSlidesPos(slidePos);
 
             else if (gamepad1.b)
-                robot.setVerticalSlidesVelocity(slideVelo);
+                robot.setUpperSlidesVelocity(slideVelo);
 
             telemetry.addData("slidePos", slidePos);
             telemetry.addData("slideVelo", slideVelo);
 
-            telemetry.addData("Vertical Slide Position", robot.getVerticalSlidePos());
+            telemetry.addData("Vertical Slide Position", robot.getUpperSlidesPos());
             telemetry.addData("Loop Speed", "%5.2f ms", loopTimer.time() * 1000);
             telemetry.update();
         }

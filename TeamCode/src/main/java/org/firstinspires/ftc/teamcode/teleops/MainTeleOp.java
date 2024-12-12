@@ -1,24 +1,34 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
-import android.icu.text.CaseMap;
-
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.robots.JamalOne;
 import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 
-@TeleOp(name = "Main TeleOp", group = "Main")
+@Config
+@TeleOp(name = "JamalTwo Main TeleOp", group = "Main")
 public class MainTeleOp extends LinearOpMode {
 
-    JamalTwo robot;
     public static double UPPER_SLIDE_MAX_SPEED = 100; // ticks / sec
     public static double LOWER_SLIDE_MAX_SPEED = 0.2; // servo position / sec
 
+    JamalTwo robot;
+
+    boolean showTelemetry = true;
+
+    boolean holdingUpperSlides = true;
+    int holdUpperSlidesPos = 0;
+    boolean upperClawOpen = true;
+    boolean lowerClawOpen = true;
+
+    ElapsedTime lowerSlidesVeloTimer = new ElapsedTime();
+
     ElapsedTime loopTimer = new ElapsedTime();
 
+    @Override
     public void runOpMode() {
         robot = new JamalTwo(this);
         robot.maxDrivePower = 0.9;
@@ -31,20 +41,46 @@ public class MainTeleOp extends LinearOpMode {
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
+            robot.update();
 
-            // TODO: univeral robot.update() method
-            // TODO: add finite state machine so things don't break
+            // TODO: instead of passing a gamepad, make variables like upperClawInput and read
+
+            // semi-automated control
+            if      (gamepad2.a) {
+                robot.startSampleTransfer();
+            }
+            else if (gamepad2.b) {
+                robot.startSpecimenPickup();
+            }
+            else if (gamepad2.x) {
+                robot.prepareSampleDeposit();
+            }
+            else if (gamepad2.y) {
+                robot.prepareSamplePickup();
+            }
+            else if (gamepad2.right_bumper) {
+                robot.prepareSpecimenDeposit();
+            }
+            else if (gamepad2.left_bumper) {
+            }
+
+            // manual control of each individual part
+            controlUpperSlides(    gamepad2 );
+            controlUpperArm(       gamepad2 );
+            controlUpperClaw(      gamepad2 );
+            controlUpperClawPitch( gamepad2 );
+
+            controlLowerSlides(    gamepad1 );
+            controlLowerClaw(      gamepad1 );
+            controlLowerClawPitch( gamepad1 );
+            controlLowerClawYaw(   gamepad1 );
+            controlDriveTrain(     gamepad1 );
 
 
-            moveUpperSlides(gamepad2);
-            moveLowerSlides(gamepad1);
-            moveDriveTrain(gamepad1);
-
-
-            if (true) {
-                telemetry.addData("Vertical Slide Position", robot.getVerticalSlidePos());
+            if (showTelemetry) {
+                telemetry.addData("Vertical Slide Position", robot.getUpperSlidesPos());
                 telemetry.addData("Upper Arm Position", robot.getUpperArmPos());
-                telemetry.addData("Horizontal Slide Position", robot.getHorizontalSlidesPos());
+                telemetry.addData("Horizontal Slide Position", robot.getLowerSlidesPos());
 
                 telemetry.addData("Max Drive Power", robot.maxDrivePower);
                 telemetry.addData("Loop Speed", "%5.2f ms", loopTimer.time() * 1000);
@@ -64,25 +100,35 @@ public class MainTeleOp extends LinearOpMode {
 
     }
 
-
-
-
-    ElapsedTime lowerSlideVeloTimer = new ElapsedTime();
-    public void moveLowerSlides(Gamepad gamepad) {
-        double input = gamepad.right_stick_x;
-        double deltaTime = 0;
-        double nextSlidePos = input * deltaTime * LOWER_SLIDE_MAX_SPEED;
-        robot.setHorizontalSlidesPos(nextSlidePos);
-    }
-
-    public void moveUpperSlides(Gamepad gamepad) {
+    public void controlUpperSlides(Gamepad gamepad) {
         double input = gamepad.left_stick_y;
 
-        double slideVelo = input * UPPER_SLIDE_MAX_SPEED;
-        robot.setVerticalSlidesVelocity(slideVelo);
+        if (input != 0) {
+            double slideVelo = input * UPPER_SLIDE_MAX_SPEED;
+            robot.setUpperSlidesVelocity(slideVelo);
+
+            holdingUpperSlides = false;
+        }
+        else {
+            if ( !holdingUpperSlides ) {
+                holdUpperSlidesPos = robot.getUpperSlidesPos();
+                holdingUpperSlides = true;
+            }
+            robot.setUpperSlidesPos(holdUpperSlidesPos);
+        }
     }
 
-    public void moveDriveTrain(Gamepad gamepad) {
+    public void controlLowerSlides(Gamepad gamepad) {
+        double input = gamepad.right_stick_x;
+
+        double deltaTime = lowerSlidesVeloTimer.time(); // time since last iteration
+        double nextSlidePos = robot.getLowerSlidesPos() + input * deltaTime * LOWER_SLIDE_MAX_SPEED;
+        robot.setLowerSlidesPos(nextSlidePos);
+
+        lowerSlidesVeloTimer.reset();
+    }
+
+    public void controlDriveTrain(Gamepad gamepad) {
 
         // TODO: field centric
 
@@ -107,4 +153,36 @@ public class MainTeleOp extends LinearOpMode {
 
         robot.drive(throttle, strafe, rotate);
     }
+
+    public void controlUpperArm(Gamepad gamepad) {
+
+    }
+
+    public void controlUpperClaw(Gamepad gamepad) {
+        if (gamepad.dpad_up) {
+            if (upperClawOpen) { robot.closeUpperClaw(); upperClawOpen = false; }
+            else               { robot.openUpperClaw();  upperClawOpen = true;  }
+        }
+    }
+
+    public void controlUpperClawPitch(Gamepad gamepad) {
+
+    }
+
+
+    public void controlLowerClaw(Gamepad gamepad) {
+        if (gamepad.dpad_down) {
+            if (lowerClawOpen) { robot.closeLowerClaw(); lowerClawOpen = false; }
+            else               { robot.openLowerClaw();  lowerClawOpen = true;  }
+        }
+    }
+
+    public void controlLowerClawPitch(Gamepad gamepad) {
+
+    }
+
+    public void controlLowerClawYaw(Gamepad gamepad) {
+
+    }
+
 }

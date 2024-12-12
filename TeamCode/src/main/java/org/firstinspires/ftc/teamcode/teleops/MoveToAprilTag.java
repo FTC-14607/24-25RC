@@ -3,32 +3,21 @@ package org.firstinspires.ftc.teamcode.teleops;
 import android.util.Size;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
-import org.firstinspires.ftc.teamcode.robots.MecanumDrive;
-import org.firstinspires.ftc.teamcode.robots.Octonaut;
+
 import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.robots.Outreach;
-import org.firstinspires.ftc.teamcode.robots.RobotBase;
-import org.firstinspires.ftc.teamcode.util.odometry.Pose;
-import org.firstinspires.ftc.teamcode.util.roadrunner.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.util.vision.TeamVisionUtilities;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
-import org.firstinspires.ftc.vision.apriltag.AprilTagMetadata;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +29,7 @@ import java.util.stream.Stream;
 // USE SCRCPY TO VIEW CAMERA STREAM DURING OPMODE
 
 @Config
-@TeleOp(name = "MoveAprilTag Test", group = "Main")
+@TeleOp(name = "MoveAprilTag Test", group = "Test")
 public class MoveToAprilTag extends LinearOpMode {
     private VisionPortal visionPortal;
     private AprilTagProcessor aprilTagProcessor;

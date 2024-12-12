@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 
-@TeleOp(name = "Acuatator Tester", group = "Main")
+@TeleOp(name = "Acuatator Tester", group = "Test")
 public class ActuatorTester extends LinearOpMode {
 
     JamalTwo robot;
@@ -55,7 +55,7 @@ public class ActuatorTester extends LinearOpMode {
                 } else if (gamepad2.dpad_right) {
                     robot.lowerSlideLeft.setPosition(servoPos);
                 } else if (gamepad2.dpad_left) {
-                    robot.setHorizontalSlidesPos(servoPos);
+                    robot.setLowerSlidesPos(servoPos);
                 }
 
             }
@@ -88,8 +88,8 @@ public class ActuatorTester extends LinearOpMode {
             telemetry.addData("servoPos", servoPos);
             telemetry.addData("slidePos", slidePos);
 
-            telemetry.addData("Vertical Slide Position", robot.getVerticalSlidePos());
-            telemetry.addData("Horizontal Slide Position", robot.getHorizontalSlidesPos());
+            telemetry.addData("Vertical Slide Position", robot.getUpperSlidesPos());
+            telemetry.addData("Horizontal Slide Position", robot.getLowerSlidesPos());
             telemetry.addData("Upper Arm Position", robot.getUpperArmPos());
             telemetry.addData("Upper Claw Position", robot.getUpperClawPos());
             telemetry.addData("Upper Claw Pitch Position", robot.getUpperClawPitchPos());
