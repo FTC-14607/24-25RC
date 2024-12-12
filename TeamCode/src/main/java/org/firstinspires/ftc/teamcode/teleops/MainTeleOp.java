@@ -64,39 +64,8 @@ public class MainTeleOp extends LinearOpMode {
 
     }
 
-    public enum TransferState {
-        PICKUP,
-        RETRACTING,
-        RAISING_CLAW,
-    }
-    public TransferState transferState = TransferState.PICKUP;
 
-    public void transferSample() {
-        switch (transferState) {
-            case PICKUP:
-                break;
-            case RETRACTING:
-                break;
 
-        }
-    }
-
-    public void prepareSpecimenPickup() {
-        robot.setVerticalSlidesPos(JamalTwo.UPPER_SLIDES_PICKUP_SPECIMEN);
-
-    }
-
-    public void prepareSpecimenDeposit() {
-        robot.setVerticalSlidesPos(JamalTwo.UPPER_SLIDES_ABOVE_HIGH_CHAMBER);
-    }
-
-    public void prepareSamplePickup() {
-
-    }
-
-    public void prepareSampleDeposit() {
-        robot.setVerticalSlidesPos(JamalTwo.UPPER_SLIDES_DEPOSIT_SAMPLE);
-    }
 
     ElapsedTime lowerSlideVeloTimer = new ElapsedTime();
     public void moveLowerSlides(Gamepad gamepad) {

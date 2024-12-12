@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.teleops;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -19,10 +20,23 @@ public class SlideTester extends LinearOpMode {
 
         int slidePos = 0;
         double slideVelo = 0;
+        double p = 0, i = 0, d = 0, f = 0;
 
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
+
+            if (gamepad1.right_trigger > 0) {
+                f += 0.0001;
+                for (DcMotorEx slide : robot.upperSlides) {
+                    slide.setVelocityPIDFCoefficients(p, i, d, f);
+                }
+            } else if (gamepad1.left_trigger > 0) {
+                f -= 0.0001;
+                for (DcMotorEx slide : robot.upperSlides) {
+                    slide.setVelocityPIDFCoefficients(p, i, d, f);
+                }
+            }
 
             if (gamepad1.left_bumper && gamepad1.right_bumper) {
                 JamalTwo.setRunMode(robot.upperSlides, DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -46,6 +60,7 @@ public class SlideTester extends LinearOpMode {
                 robot.setVerticalSlidesVelocity(slideVelo);
 
             telemetry.addData("slidePos", slidePos);
+            telemetry.addData("slideVelo", slideVelo);
 
             telemetry.addData("Vertical Slide Position", robot.getVerticalSlidePos());
             telemetry.addData("Loop Speed", "%5.2f ms", loopTimer.time() * 1000);

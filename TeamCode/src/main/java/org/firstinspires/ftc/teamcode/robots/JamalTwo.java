@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.util.odometry.AutoDriver;
@@ -71,19 +72,28 @@ public class JamalTwo extends MecanumDrive {
     public static int UPPER_SLIDES_TOP = 4600;
     public static int UPPER_SLIDES_ABOVE_HIGH_CHAMBER = 3050;
     public static int UPPER_SLIDES_BELOW_HIGH_CHAMBER = 2075;
+    public static int UPPER_SLIDES_MIN_ARM_CLEARANCE = 500; // minimum height at which the upper arm can go fully down
     public static int UPPER_SLIDES_PICKUP_SPECIMEN = 750;
+    public static int UPPER_SLIDES_DEPOSIT_SPECIMEN = 800;
     public static int UPPER_SLIDES_DEPOSIT_SAMPLE = 4000;
-    public static double VERT_SLIDES_DEFAULT_SPEED = 100;
-    public static double VERT_SLIDES_INCHES_TO_TICKS = -1;
+
+    public static double UPPER_SLIDES_DEFAULT_SPEED = 100;
+    public static double UPPER_SLIDES_INCHES_TO_TICKS = -1;
 
     public static double UPPER_ARM_LOWERED = 0; // servo position [0, 1]
     public static double UPPER_ARM_RAISED = 1;
+    public static double UPPER_ARM_PICKUP_SPECIMEN = 0;
+    public static double UPPER_ARM_DEPOSIT_SPECIMEN = 0.5;
+    public static double UPPER_ARM_DEPOSIT_SAMPLE = 1;
 
     public static double UPPER_CLAW_CLOSED = 0.862;
     public static double UPPER_CLAW_OPEN = 0.735;
     public static double UPPER_CLAW_DOWN = 0;
     public static double UPPER_CLAW_UP = 1;
-    public static double UPPER_CLAW_SCORE_SPECIMEN = 0.5;
+    public static double UPPER_CLAW_PICKUP_SPECIMEN = 0.1;
+    public static double UPPER_CLAW_DEPOSIT_SPECIMEN = 0.5;
+    public static double UPPER_CLAW_DEPOSIT_SAMPLE = 0.5;
+    public static double UPPER_CLAW_PITCH_TRANSFER = 1;
 
     public static double LOWER_SLIDES_RETRACTED = 0.86;
     public static double LOWER_SLIDES_EXTENDED = 0.6;
@@ -95,6 +105,8 @@ public class JamalTwo extends MecanumDrive {
     public static double LOWER_CLAW_VERTICAL_FLIPPED = 0.78;
     public static double LOWER_CLAW_DOWN = 0.2;
     public static double LOWER_CLAW_UP = 1;
+    public static double LOWER_CLAW_PITCH_TRANSFER = 1;
+    public static double LOWER_CLAW_YAW_TRANSFER = LOWER_CLAW_HORIZONTAL;
 
 
     public JamalTwo(LinearOpMode opmode) {
@@ -284,6 +296,101 @@ public class JamalTwo extends MecanumDrive {
 
         upperArmRight.setPosition(setPos);
         setUpperClawPitchPos(dumperPos - posChange);  // dumper rotates the opposite way by the same amount
+    }
+
+    // ------------------------------- PRESET ACTIONS --------------------------------------
+
+    /**
+     * Checks if any preset (finite-state machine-controlled) actions are being executed)
+     * @return
+     */
+    public boolean isExecutingAction() {
+        return
+            transferState       == TransferState.INACTIVE &&
+            specimenPickupState == SpecimenPickupState.INACTIVE;
+    }
+
+    private enum TransferState { INACTIVE,  RETRACTING_SLIDES, TRANSFERRING }
+    private TransferState transferState = TransferState.INACTIVE;
+    private ElapsedTime transferTimer = new ElapsedTime();
+    private static double LOWER_SLIDES_RETRACT_DURATION = 0.5; // sec
+    /**
+     * Needs to be called in-loop
+     */
+    public void transferSample() {
+        switch (transferState) {
+            case INACTIVE:
+                if ( !isExecutingAction() ) {
+                    setLowerClawPitchPos( LOWER_CLAW_PITCH_TRANSFER );
+                    setLowerClawYawPos(   LOWER_CLAW_YAW_TRANSFER   );
+
+                    transferTimer.reset();
+
+                    if (getHorizontalSlidesPos() != LOWER_SLIDES_RETRACTED) {
+                        retractLowerSlides();
+                        transferState = TransferState.RETRACTING_SLIDES;
+                    } else {
+                        transferState = TransferState.TRANSFERRING;
+                    }
+                }
+                break;
+            case RETRACTING_SLIDES:
+                if (transferTimer.time() > LOWER_SLIDES_RETRACT_DURATION) {
+                    transferTimer.reset();
+                    transferState = TransferState.TRANSFERRING;
+                }
+                break;
+            case TRANSFERRING:
+                break;
+        }
+    }
+
+    private enum SpecimenPickupState { INACTIVE, RAISING_SLIDES, LOWERING_ARM }
+    private SpecimenPickupState specimenPickupState = SpecimenPickupState.INACTIVE;
+    private ElapsedTime specimenPickupTimer = new ElapsedTime();
+    private static double UPPER_ARM_SWING_DURATION = 0.5; // seconds
+    /**
+     * Needs to be called in-loop
+     */
+    public void prepareSpecimenPickup() {
+        switch (specimenPickupState) {
+            case INACTIVE:
+                if ( !isExecutingAction() ) {
+                    setVerticalSlidesPos(JamalTwo.UPPER_SLIDES_PICKUP_SPECIMEN);
+                    specimenPickupState = SpecimenPickupState.RAISING_SLIDES;
+                }
+                break;
+            case RAISING_SLIDES:
+                if ( getVerticalSlidePos() > UPPER_SLIDES_MIN_ARM_CLEARANCE) {
+                    setUpperArmPos(UPPER_ARM_PICKUP_SPECIMEN);
+                    setUpperClawPos(UPPER_CLAW_PICKUP_SPECIMEN);
+                    specimenPickupTimer.reset();
+                    specimenPickupState = SpecimenPickupState.LOWERING_ARM;
+                }
+                break;
+            case LOWERING_ARM:
+                if ( specimenPickupTimer.time() > UPPER_ARM_SWING_DURATION)
+                    specimenPickupState = SpecimenPickupState.INACTIVE;
+                break;
+        }
+    }
+
+    public void prepareSpecimenDeposit() {
+        setVerticalSlidesPos( UPPER_SLIDES_ABOVE_HIGH_CHAMBER );
+        setUpperArmPos(       UPPER_ARM_DEPOSIT_SPECIMEN      );
+        setUpperClawPitchPos( UPPER_CLAW_DEPOSIT_SPECIMEN     );
+    }
+
+    public void prepareSamplePickup() {
+        extendLowerSlides();
+        setLowerClawPitchPos( LOWER_CLAW_DOWN       );
+        setLowerClawYawPos(   LOWER_CLAW_HORIZONTAL );
+    }
+
+    public void prepareSampleDeposit() {
+        setVerticalSlidesPos( UPPER_SLIDES_DEPOSIT_SAMPLE );
+        setUpperArmPos(       UPPER_ARM_DEPOSIT_SAMPLE    );
+        setUpperClawPitchPos( UPPER_CLAW_DEPOSIT_SAMPLE   );
     }
 
 }
