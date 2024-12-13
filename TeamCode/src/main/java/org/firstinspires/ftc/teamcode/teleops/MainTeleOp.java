@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.teleops;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -12,7 +14,7 @@ import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 @TeleOp(name = "JamalTwo Main TeleOp", group = "Main")
 public class MainTeleOp extends LinearOpMode {
 
-    public static double UPPER_SLIDE_MAX_SPEED = 100; // ticks / sec
+    public static double UPPER_SLIDE_MAX_SPEED = 800; // ticks / sec
     public static double LOWER_SLIDE_MAX_SPEED = 0.2; // servo position / sec
 
     JamalTwo robot;
@@ -70,7 +72,7 @@ public class MainTeleOp extends LinearOpMode {
             controlUpperClaw(      gamepad2 );
             controlUpperClawPitch( gamepad2 );
 
-            controlLowerSlides(    gamepad1 );
+//            controlLowerSlides(    gamepad1 );
             controlLowerClaw(      gamepad1 );
             controlLowerClawPitch( gamepad1 );
             controlLowerClawYaw(   gamepad1 );
@@ -79,8 +81,12 @@ public class MainTeleOp extends LinearOpMode {
 
             if (showTelemetry) {
                 telemetry.addData("Vertical Slide Position", robot.getUpperSlidesPos());
+                telemetry.addData("vert hold pos", holdUpperSlidesPos);
                 telemetry.addData("Upper Arm Position", robot.getUpperArmPos());
                 telemetry.addData("Horizontal Slide Position", robot.getLowerSlidesPos());
+
+                telemetry.addData("pos pid", robot.upperSlideRight.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION));
+                telemetry.addData("velo pid", robot.upperSlideRight.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
 
                 telemetry.addData("Max Drive Power", robot.maxDrivePower);
                 telemetry.addData("Loop Speed", "%5.2f ms", loopTimer.time() * 1000);
@@ -88,12 +94,6 @@ public class MainTeleOp extends LinearOpMode {
             }
         }
 
-//        telemetry.addAction()
-        telemetry.speak("only in Ohio do Sigmas fanum tax skibidi gyatts");
-
-        telemetry.addLine("wow");
-        telemetry.update();
-        sleep(5000);
     }
 
     public void initPositions() {
@@ -101,10 +101,13 @@ public class MainTeleOp extends LinearOpMode {
     }
 
     public void controlUpperSlides(Gamepad gamepad) {
-        double input = gamepad.left_stick_y;
+        double input = -gamepad.left_stick_y;
 
         if (input != 0) {
             double slideVelo = input * UPPER_SLIDE_MAX_SPEED;
+            telemetry.addData("slidevelo", slideVelo);
+//            for (DcMotorEx slide : robot.upperSlides)
+//                slide.setPower(slideVelo);
             robot.setUpperSlidesVelocity(slideVelo);
 
             holdingUpperSlides = false;
@@ -114,6 +117,8 @@ public class MainTeleOp extends LinearOpMode {
                 holdUpperSlidesPos = robot.getUpperSlidesPos();
                 holdingUpperSlides = true;
             }
+//            for (DcMotorEx slide : robot.upperSlides)
+//                slide.setPower(0);
             robot.setUpperSlidesPos(holdUpperSlidesPos);
         }
     }

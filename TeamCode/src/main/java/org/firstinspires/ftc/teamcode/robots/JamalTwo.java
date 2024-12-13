@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.util.odometry.AutoDriver;
 import org.firstinspires.ftc.teamcode.util.odometry.ThreeWheelOdometry;
@@ -81,9 +80,9 @@ public class JamalTwo extends MecanumDrive {
     public static double UPPER_SLIDES_DEFAULT_SPEED = 100;
     public static double UPPER_SLIDES_INCHES_TO_TICKS = -1;
 
-    public static double UPPER_ARM_LOWERED = 0; // servo position [0, 1]
+    public static double UPPER_ARM_LOWERED = 0.1; // servo position [0, 1]
     public static double UPPER_ARM_RAISED = 1;
-    public static double UPPER_ARM_PICKUP_SPECIMEN = 0;
+    public static double UPPER_ARM_PICKUP_SPECIMEN = 0.09;
     public static double UPPER_ARM_DEPOSIT_SPECIMEN = 0.5;
     public static double UPPER_ARM_DEPOSIT_SAMPLE = 1;
 
@@ -91,20 +90,20 @@ public class JamalTwo extends MecanumDrive {
     public static double UPPER_CLAW_OPEN = 0.735;
     public static double UPPER_CLAW_DOWN = 0;
     public static double UPPER_CLAW_UP = 1;
-    public static double UPPER_CLAW_PICKUP_SPECIMEN = 0.1;
-    public static double UPPER_CLAW_DEPOSIT_SPECIMEN = 0.5;
-    public static double UPPER_CLAW_DEPOSIT_SAMPLE = 0.5;
+    public static double UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.91;
+    public static double UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.5;
+    public static double UPPER_CLAW_PITCH_DEPOSIT_SAMPLE = 0.5;
     public static double UPPER_CLAW_PITCH_TRANSFER = 1;
 
-    public static double LOWER_SLIDES_RETRACTED = 0.86;
-    public static double LOWER_SLIDES_EXTENDED = 0.6;
+    public static double LOWER_SLIDES_RETRACTED = 0.134;
+    public static double LOWER_SLIDES_EXTENDED = 0.422;
 
-    public static double LOWER_CLAW_CLOSED = 0.84;
-    public static double LOWER_CLAW_OPEN = 0.64;
-    public static double LOWER_CLAW_HORIZONTAL = 0.46; // to pick up vertical samples
-    public static double LOWER_CLAW_VERTICAL = 0.14;
-    public static double LOWER_CLAW_VERTICAL_FLIPPED = 0.78;
-    public static double LOWER_CLAW_DOWN = 0.2;
+    public static double LOWER_CLAW_CLOSED = 0.83;
+    public static double LOWER_CLAW_OPEN = 0.55;
+    public static double LOWER_CLAW_HORIZONTAL = 0.0574; // to pick up vertical samples
+    public static double LOWER_CLAW_VERTICAL = 0.3786;
+    public static double LOWER_CLAW_HORIZONTAL_FLIPPED = 0.708;
+    public static double LOWER_CLAW_DOWN = 0.3984;
     public static double LOWER_CLAW_UP = 1;
     public static double LOWER_CLAW_PITCH_TRANSFER = 1;
     public static double LOWER_CLAW_YAW_TRANSFER = LOWER_CLAW_HORIZONTAL;
@@ -307,7 +306,7 @@ public class JamalTwo extends MecanumDrive {
             case RAISING_SLIDES:
                 if ( getUpperSlidesPos() > UPPER_SLIDES_MIN_ARM_CLEARANCE) {
                     setUpperArmPos(UPPER_ARM_PICKUP_SPECIMEN);
-                    setUpperClawPos(UPPER_CLAW_PICKUP_SPECIMEN);
+                    setUpperClawPos(UPPER_CLAW_PITCH_PICKUP_SPECIMEN);
                     specimenPickupTimer.reset();
                     specimenPickupState = SpecimenPickupState.LOWERING_ARM;
                 }
@@ -332,7 +331,7 @@ public class JamalTwo extends MecanumDrive {
     public void prepareSpecimenDeposit() {
         setUpperSlidesPos(    UPPER_SLIDES_ABOVE_HIGH_CHAMBER );
         setUpperArmPos(       UPPER_ARM_DEPOSIT_SPECIMEN      );
-        setUpperClawPitchPos( UPPER_CLAW_DEPOSIT_SPECIMEN     );
+        setUpperClawPitchPos(UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN);
     }
 
     public void prepareSamplePickup() {
@@ -344,7 +343,7 @@ public class JamalTwo extends MecanumDrive {
     public void prepareSampleDeposit() {
         setUpperSlidesPos(    UPPER_SLIDES_DEPOSIT_SAMPLE );
         setUpperArmPos(       UPPER_ARM_DEPOSIT_SAMPLE    );
-        setUpperClawPitchPos( UPPER_CLAW_DEPOSIT_SAMPLE   );
+        setUpperClawPitchPos(UPPER_CLAW_PITCH_DEPOSIT_SAMPLE);
     }
 
     // ------------------------------- GETTERS AND SETTERS -----------------------------------
@@ -374,9 +373,12 @@ public class JamalTwo extends MecanumDrive {
         if ( (currentPos >= UPPER_SLIDES_TOP && velocity > 0) || (currentPos <= UPPER_SLIDES_BOTTOM && velocity < 0) )
             return;
 
+
         // set velocity
         for (DcMotorEx slide : upperSlides) {
             slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            slide.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(5,0,0,0));
+            telemetry.addData("velo", velocity);
             slide.setVelocity(velocity);
         }
     }
@@ -387,7 +389,7 @@ public class JamalTwo extends MecanumDrive {
     public void setUpperSlidesPos(int pos) {
         // TODO: PIDF - find F, also use external PID
         int currentPos = getUpperSlidesPos();
-        pos = Range.clip(pos, UPPER_SLIDES_BOTTOM, UPPER_SLIDES_TOP);
+        pos = clip(pos, UPPER_SLIDES_BOTTOM, UPPER_SLIDES_TOP);
 
         for (DcMotorEx slide : upperSlides) {
             slide.setTargetPosition(pos);
@@ -411,7 +413,7 @@ public class JamalTwo extends MecanumDrive {
         // TODO: add camera for auto pickup
     }
     public void setLowerClawPos(double pos)      { lowerClaw.setPosition(clip(pos, LOWER_CLAW_CLOSED, LOWER_CLAW_OPEN)); }
-    public void setLowerClawYawPos(double pos)   { lowerClawYaw.setPosition(clip(pos, LOWER_CLAW_VERTICAL, LOWER_CLAW_VERTICAL_FLIPPED)); }
+    public void setLowerClawYawPos(double pos)   { lowerClawYaw.setPosition(clip(pos, LOWER_CLAW_VERTICAL, LOWER_CLAW_HORIZONTAL_FLIPPED)); }
     public void setLowerClawPitchPos(double pos) { lowerClawPitch.setPosition(clip(pos, LOWER_CLAW_DOWN, LOWER_CLAW_UP)); }
 
 }

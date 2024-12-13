@@ -34,8 +34,8 @@ public class ActuatorTester extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
 
-            if      (gamepad2.right_trigger > 0) servoPos = Math.min(1, servoPos + 0.001);
-            else if (gamepad2.left_trigger  > 0) servoPos = Math.max(0, servoPos - 0.001);
+            if      (gamepad2.right_trigger > 0) servoPos = Math.min(1, servoPos + 0.0002);
+            else if (gamepad2.left_trigger  > 0) servoPos = Math.max(0, servoPos - 0.0002);
 
             if (gamepad2.a) {
                 if (gamepad2.dpad_down) {
