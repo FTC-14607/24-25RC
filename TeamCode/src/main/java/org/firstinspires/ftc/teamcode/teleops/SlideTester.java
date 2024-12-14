@@ -25,6 +25,10 @@ public class SlideTester extends LinearOpMode {
         double p = 0, i = 0, d = 0, f = 0;
         PIDFCoefficients veloPid = new PIDFCoefficients(1,0,0,0);
 
+        telemetry.addData("Voltage", robot.controlHubVoltage);
+        telemetry.addData("voltage scale", robot.voltageScaler);
+        telemetry.update();
+
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
