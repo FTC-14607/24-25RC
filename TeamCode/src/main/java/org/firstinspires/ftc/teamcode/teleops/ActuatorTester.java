@@ -33,6 +33,7 @@ public class ActuatorTester extends LinearOpMode {
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
+            robot.update();
 
             if      (gamepad2.right_trigger > 0) servoPos = Math.min(1, servoPos + 0.0002);
             else if (gamepad2.left_trigger  > 0) servoPos = Math.max(0, servoPos - 0.0002);
@@ -41,12 +42,15 @@ public class ActuatorTester extends LinearOpMode {
                 if (gamepad2.dpad_down) {
                     JamalTwo.setRunMode(robot.upperSlides, DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 } else if (gamepad2.right_trigger > 0) {
-                    slidePos += 1;
+                    robot.upperSlideRight.setPowerEx(0.3);
+                    robot.upperSlideLeft.setPowerEx(0.3);
                 } else if (gamepad2.left_trigger > 0) {
-                    slidePos = Math.max(0, slidePos - 1);
+                    robot.upperSlideRight.setPowerEx(-0.3);
+                    robot.upperSlideLeft.setPowerEx(-0.3);
+                } else {
+                    robot.upperSlideRight.brake();
+                    robot.upperSlideLeft.brake();
                 }
-
-                robot.setUpperSlidesPos(slidePos);
             }
 
             else if (gamepad2.b) {
@@ -64,9 +68,10 @@ public class ActuatorTester extends LinearOpMode {
                 if (gamepad2.dpad_up) {
                     robot.upperClaw.setPosition(servoPos);
                 } else if (gamepad2.dpad_left) {
-                    robot.upperArmRight.setPosition(servoPos);
+//                    robot.upperArmRight.setPosition(servoPos);
                 } else if (gamepad2.dpad_down) {
-                    robot.upperArmLeft.setPosition(servoPos);
+                    robot.setUpperArmPos(servoPos);
+//                    robot.upperArmLeft.setPosition(servoPos);
                 } else if (gamepad2.dpad_right) {
                     robot.upperClawPitch.setPosition(servoPos);
                 }
@@ -113,7 +118,7 @@ public class ActuatorTester extends LinearOpMode {
 
         // set drivetrain power
         double throttle = gamepad.left_stick_y * -1;
-        double strafe   = gamepad.left_stick_x;
+        double strafe   = gamepad.left_stick_x * -1;
         double rotate   = gamepad.right_stick_x;
 
         // dpad for easy orthogonal movement

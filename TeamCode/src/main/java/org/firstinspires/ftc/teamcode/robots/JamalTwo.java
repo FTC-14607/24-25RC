@@ -2,20 +2,20 @@ package org.firstinspires.ftc.teamcode.robots;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDController;
-import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.qualcomm.hardware.rev.Rev9AxisImu;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.util.hardware.LinearSlideMotor;
 import org.firstinspires.ftc.teamcode.util.odometry.AutoDriver;
+import org.firstinspires.ftc.teamcode.util.hardware.Encoder;
 import org.firstinspires.ftc.teamcode.util.odometry.ThreeWheelOdometry;
 import org.firstinspires.ftc.teamcode.util.odometry.MecanumThreeWheelOdometryDriver;
-import org.firstinspires.ftc.teamcode.util.odometry.MotorEncoder;
 import org.firstinspires.ftc.teamcode.util.odometry.RobotLocalizer;
 
 @Config
@@ -23,30 +23,33 @@ public class JamalTwo extends MecanumDrive {
 
     //region hardware
     // * drivetrain: goBILDA 96mm Mecanum Wheels and goBILDA 5203 312 RPM Motors
-    public DcMotorEx    upperSlideRight; // goBILDA 5203 312 RPM
-    public DcMotorEx    upperSlideLeft;  // same
-    public Servo        upperArmRight;   // Axon Mini
-    public Servo        upperArmLeft;    // same
-    public Servo        upperClaw;       // goBILDA Torque
-    public Servo        upperClawPitch;  // same
+    public LinearSlideMotor upperSlideRight; // goBILDA 5203 312 RPM
+    public LinearSlideMotor upperSlideLeft;  // same
+    public Servo upperArmRight;   // Axon Mini
+    public Servo upperArmLeft;    // same
+    public Servo upperClaw;       // goBILDA Torque
+    public Servo upperClawPitch;  // same
 
-    public Servo        lowerSlideRight; // same
-    public Servo        lowerSlideLeft;  // same
-    public Servo        lowerClaw;       // same
-    public Servo        lowerClawYaw;    // same
-    public Servo        lowerClawPitch;  // same
+    public Servo lowerSlideRight; // same
+    public Servo lowerSlideLeft;  // same
+    public Servo lowerClaw;       // same
+    public Servo lowerClawYaw;    // same
+    public Servo lowerClawPitch;  // same
 
-    public MotorEncoder odoRight; // goBILDA Swingarm Odometry Pod (2000 ticks/rot, 48mm wheel)
-    public MotorEncoder odoLeft;  // same
-    public MotorEncoder odoPerp;  // same
+    public Encoder odoRight; // goBILDA Swingarm Odometry Pod (2000 ticks/rot, 48mm wheel)
+    public Encoder odoLeft;  // same
+    public Encoder odoPerp;  // same
     //endregion
     //region control
-    public DcMotorEx[] upperSlides;
+    public LinearSlideMotor[] upperSlides;
     public int upperSlideRightPos, upperSlideLeftPos, upperSlidesPos;
     public double upperSlideRightVelo, upperSlideLeftVelo;
-    public static PIDFController upperSlidesVelocityController;
-    public static PIDController  upperSlidesPositionController;
+    public double upperSlidesTargetPosition;
     public double upperSlidesTargetVelocity;
+    public double upperSlidesMaxPower = 0.9;
+
+    public static PIDFCoefficients upperSlidesVelocityPIDFCoefficients = new PIDFCoefficients(0.00032,0.0,0.0,0.00005);
+    public static double upperSlidesPositionGain = 3;
 
     public Servo[] lowerSlides;
 
@@ -65,44 +68,48 @@ public class JamalTwo extends MecanumDrive {
     public final static double ODO_WHEEL_DIAMETER = centimetersToInches(48. / 10);
 
     public static int UPPER_SLIDES_BOTTOM = 0; // ticks
-    public static int UPPER_SLIDES_TOP = 4600;
-    public static int UPPER_SLIDES_ABOVE_HIGH_CHAMBER = 3050;
-    public static int UPPER_SLIDES_BELOW_HIGH_CHAMBER = 2075;
-    public static int UPPER_SLIDES_MIN_ARM_CLEARANCE = 500; // minimum height at which the upper arm can go fully down
-    public static int UPPER_SLIDES_PICKUP_SPECIMEN = 750;
-    public static int UPPER_SLIDES_DEPOSIT_SPECIMEN = 800;
-    public static int UPPER_SLIDES_DEPOSIT_SAMPLE = 4000;
+    public static int UPPER_SLIDES_TOP = 4550;
+    public static int UPPER_SLIDES_TRANSFER = 0;
+    public static int UPPER_SLIDES_MIN_ARM_CLEARANCE = 1700; // minimum height at which the upper arm can go fully down
+    public static int UPPER_SLIDES_PICKUP_SPECIMEN = 1860;
+    public static int UPPER_SLIDES_DEPOSIT_SPECIMEN = UPPER_SLIDES_TOP;
+    public static int UPPER_SLIDES_DEPOSIT_SAMPLE = 2950;
 
     public static double UPPER_SLIDES_DEFAULT_SPEED = 100;
     public static double UPPER_SLIDES_INCHES_TO_TICKS = -1;
 
-    public static double UPPER_ARM_LOWERED = 0.1; // servo position [0, 1]
+    public static double UPPER_ARM_LOWERED = 0.02; // servo position [0, 1]
     public static double UPPER_ARM_RAISED = 1;
-    public static double UPPER_ARM_PICKUP_SPECIMEN = 0.09;
-    public static double UPPER_ARM_DEPOSIT_SPECIMEN = 0.5;
+    public static double UPPER_ARM_REST = 0.466;
+    public static double UPPER_ARM_TRANSFER = 0.63;
+    public static double UPPER_ARM_PICKUP_SPECIMEN = 0.04;
+    public static double UPPER_ARM_DEPOSIT_SPECIMEN = 0.04;
     public static double UPPER_ARM_DEPOSIT_SAMPLE = 1;
 
     public static double UPPER_CLAW_CLOSED = 0.862;
     public static double UPPER_CLAW_OPEN = 0.735;
     public static double UPPER_CLAW_DOWN = 0;
     public static double UPPER_CLAW_UP = 1;
-    public static double UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.91;
-    public static double UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.5;
-    public static double UPPER_CLAW_PITCH_DEPOSIT_SAMPLE = 0.5;
-    public static double UPPER_CLAW_PITCH_TRANSFER = 1;
+    public static double UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.282;
+    public static double UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.282;
+    public static double UPPER_CLAW_PITCH_DEPOSIT_SAMPLE = 0.5428;
+    public static double UPPER_CLAW_PITCH_TRANSFER = 0.3228;
 
-    public static double LOWER_SLIDES_RETRACTED = 0.134;
+    public static double LOWER_SLIDES_RETRACTED = 0.1522;
     public static double LOWER_SLIDES_EXTENDED = 0.422;
+    public static double LOWER_SLIDES_RETRACT_DURATION = 0.7; // sec
+    public static double LOWER_SLIDES_EXTEND_DURATION = 0.3;
 
     public static double LOWER_CLAW_CLOSED = 0.83;
     public static double LOWER_CLAW_OPEN = 0.55;
-    public static double LOWER_CLAW_HORIZONTAL = 0.0574; // to pick up vertical samples
-    public static double LOWER_CLAW_VERTICAL = 0.3786;
-    public static double LOWER_CLAW_HORIZONTAL_FLIPPED = 0.708;
-    public static double LOWER_CLAW_DOWN = 0.3984;
+    public static double LOWER_CLAW_YAW_HORIZONTAL = 0.0574; // to pick up vertical samples
+    public static double LOWER_CLAW_YAW_45DEGREES = 0.5433;
+    public static double LOWER_CLAW_YAW_VERTICAL = 0.3786;
+    public static double LOWER_CLAW_YAW_HORIZONTAL_FLIPPED = 0.708;
+    public static double LOWER_CLAW_DOWN = 0.415;
     public static double LOWER_CLAW_UP = 1;
-    public static double LOWER_CLAW_PITCH_TRANSFER = 1;
-    public static double LOWER_CLAW_YAW_TRANSFER = LOWER_CLAW_HORIZONTAL;
+    public static double LOWER_CLAW_PITCH_TRANSFER = LOWER_CLAW_UP;
+    public static double LOWER_CLAW_YAW_TRANSFER = LOWER_CLAW_YAW_HORIZONTAL_FLIPPED;
     //endregion
 
     public JamalTwo(LinearOpMode opmode) {
@@ -120,40 +127,47 @@ public class JamalTwo extends MecanumDrive {
         STRAFE_ROTATION_CORRECTION = 0;
 
         // connect to hardware
-        upperSlideRight = hardwareMap.get(DcMotorEx.class, "upperSlideRight");
-        upperSlideLeft  = hardwareMap.get(DcMotorEx.class, "upperSlideLeft");
-        upperArmRight   = hardwareMap.get(Servo.class,     "upperArmRight");
-        upperArmLeft    = hardwareMap.get(Servo.class,     "upperArmLeft");
-        upperClaw       = hardwareMap.get(Servo.class,     "upperClaw");
-        upperClawPitch  = hardwareMap.get(Servo.class,     "upperClawPitch");
+        upperSlideRight = new LinearSlideMotor(hardwareMap.get(DcMotorEx.class, "upperSlideRight"));
+        upperSlideLeft  = new LinearSlideMotor(hardwareMap.get(DcMotorEx.class, "upperSlideLeft"));
+        upperArmRight   = hardwareMap.get(Servo.class, "upperArmRight");
+        upperArmLeft    = hardwareMap.get(Servo.class, "upperArmLeft");
+        upperClaw       = hardwareMap.get(Servo.class, "upperClaw");
+        upperClawPitch  = hardwareMap.get(Servo.class, "upperClawPitch");
 
-        lowerSlideRight = hardwareMap.get(Servo.class,     "lowerSlideRight");
-        lowerSlideLeft  = hardwareMap.get(Servo.class,     "lowerSlideLeft");
-        lowerClaw       = hardwareMap.get(Servo.class,     "lowerClaw");
-        lowerClawYaw    = hardwareMap.get(Servo.class,     "lowerClawYaw");
-        lowerClawPitch  = hardwareMap.get(Servo.class,     "lowerClawPitch");
+        lowerSlideRight = hardwareMap.get(Servo.class, "lowerSlideRight");
+        lowerSlideLeft  = hardwareMap.get(Servo.class, "lowerSlideLeft");
+        lowerClaw       = hardwareMap.get(Servo.class, "lowerClaw");
+        lowerClawYaw    = hardwareMap.get(Servo.class, "lowerClawYaw");
+        lowerClawPitch  = hardwareMap.get(Servo.class, "lowerClawPitch");
 
-        odoRight = new MotorEncoder(frontLeft); // encoders are plugged in next to motors
-        odoLeft =  new MotorEncoder(backRight);
-        odoPerp =  new MotorEncoder(frontRight);
+        odoRight = new Encoder(frontLeft); // encoders are plugged in next to motors
+        odoLeft =  new Encoder(backRight);
+        odoPerp =  new Encoder(frontRight);
 
         // initialization and setup
-        upperSlides = new DcMotorEx[] {upperSlideRight, upperSlideLeft};
-        upperSlideLeft.setDirection(DcMotor.Direction.REVERSE);
-        setZeroPowerBehavior(upperSlides, DcMotor.ZeroPowerBehavior.BRAKE); // TODO: experiment with this
-        setRunMode(upperSlides, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        upperSlides = new LinearSlideMotor[] {upperSlideRight, upperSlideLeft};
+        for (LinearSlideMotor slide : upperSlides) {
+            slide.addControl(UPPER_SLIDES_BOTTOM, UPPER_SLIDES_TOP, voltageScaler, upperSlidesMaxPower,
+                    upperSlidesPositionGain,
+                    upperSlidesVelocityPIDFCoefficients.p,
+                    upperSlidesVelocityPIDFCoefficients.i,
+                    upperSlidesVelocityPIDFCoefficients.d,
+                    upperSlidesVelocityPIDFCoefficients.f
+            );
+        }
+        upperSlideRight.setDirection(DcMotor.Direction.REVERSE);
 
         upperArmRight.setDirection(Servo.Direction.REVERSE);
 
         // TODO: internal servo scaling
 //        upperClaw.scaleRange(UPPER_CLAW_CLOSED, UPPER_CLAW_OPEN); //
-//        upperClawPitch.setDirection(Servo.Direction.REVERSE);
+        upperClawPitch.setDirection(Servo.Direction.REVERSE);
 
         lowerSlides = new Servo[] {lowerSlideRight, lowerSlideLeft};
         lowerSlideRight.setDirection(Servo.Direction.REVERSE);
 
-        odoLeft.setDirection(MotorEncoder.Direction.REVERSE);
-//        odoPerp.setDirection(MotorEncoder.Direction.REVERSE);
+        odoLeft.setDirection(Encoder.Direction.REVERSE);
+//        odoPerp.setDirection(Encoder.Direction.REVERSE);
 
         imu.resetYaw();
 
@@ -180,8 +194,10 @@ public class JamalTwo extends MecanumDrive {
     public void update() {
         updatePose();
         updateUpperSlides();
-        updateSampleTransferFSM();
-        updateSpecimenPickupFSM();
+        updateTransferFSM();
+        updatePrepareSpecimenPickupFSM();
+        updatePrepareSamplePickupFSM();
+        updatePrepareSampleDepositFSM();
     }
 
     public void resetPose() {
@@ -201,80 +217,39 @@ public class JamalTwo extends MecanumDrive {
     // ----------------------------------- INTERACTORS ---------------------------------------
 
     //region Upper Slides
-    private enum UpperSlidesState { INACTIVE, RUN_BY_VELOCITY, RUN_TO_POSITION }
-    private UpperSlidesState upperSlidesState = UpperSlidesState.INACTIVE;
-
     private void updateUpperSlides() {
-        upperSlideRightPos  = upperSlideRight.getCurrentPosition();
-        upperSlideLeftPos   = upperSlideLeft .getCurrentPosition();
-        upperSlidesPos      = Math.max(upperSlideRightPos, upperSlideLeftPos);
-        upperSlideRightVelo = upperSlideRight.getVelocity();
-        upperSlideLeftVelo  = upperSlideLeft .getVelocity();
+        upperSlideRight.update();
+        upperSlideLeft.update();
 
-        switch (upperSlidesState) {
-            case INACTIVE:
-                break;
-            case RUN_BY_VELOCITY:
-                // prevent exceeding slide limits
-                if (
-                    (upperSlidesPos >= UPPER_SLIDES_TOP && upperSlidesTargetVelocity >= 0) ||
-                    (upperSlidesPos <= UPPER_SLIDES_BOTTOM && upperSlidesTargetVelocity <= 0)
-                ) {
-                    return;
-                }
-                double rightPower = upperSlidesVelocityController.calculate(upperSlideRightVelo);
-                double leftPower = upperSlidesVelocityController.calculate(upperSlideLeftVelo);
-
-                upperSlideRight.setPower(rightPower);
-                upperSlideLeft.setPower(leftPower);
-                break;
-            case RUN_TO_POSITION:
-                break;
-        }
+        upperSlidesPos = Math.max(upperSlideRight.getLastPosition(), upperSlideLeft.getLastPosition());
 
         if (showTelemetry) {
-            telemetry.addData("skibid toilet", 12);
+//            telemetry.addData("outpower", upperSlideRight.totpower);
+//            telemetry.addData("rmode", upperSlideRight.rmode);
+//            telemetry.addData("Slide FF Power", "%5.2f | %5.2f", upperSlideRight.ffpower, upperSlideLeft.ffpower);
+//            telemetry.addData("Slide FB Power", "%5.2f | %5.2f", upperSlideRight.fbpower, upperSlideLeft.fbpower);
+            telemetry.addData("Slide Power", "%5.2f | %5.2f", upperSlideRight.getPower(), upperSlideLeft.getPower());
+            telemetry.addData("Slide Positions", "%d | %d", upperSlideRight.getLastPosition(), upperSlideLeft.getLastPosition());
+            telemetry.addData("Slide Targets", "%d | %d", upperSlideRight.getTargetPositionEx(), upperSlideLeft.getTargetPositionEx());
+
+            telemetry.addData("Slide Velocity", "%5.2f | %5.2f", upperSlideRight.getLastVelocity(), upperSlideLeft.getLastVelocity());
+            telemetry.addData("Slide Velocity Targets", "%5.2f | %5.2f", upperSlideRight.getTargetVelocityEx(), upperSlideLeft.getTargetVelocityEx());
         }
     }
 
     public int getUpperSlidesPos() { return upperSlidesPos; }
-    public double getUpperSlidesVelo() { return upperSlideRight.getVelocity(); }
-
-    /**
-     * @param velocity [ticks/sec], positive is up
-     */
-    public void setUpperSlidesVelocity(double velocity) { // ticks/s
-        int currentPos = getUpperSlidesPos();
-
-        // prevent exceeding slide limits
-        if ( (currentPos >= UPPER_SLIDES_TOP && velocity > 0) || (currentPos <= UPPER_SLIDES_BOTTOM && velocity < 0) )
-            return;
-
-        // set velocity
-        for (DcMotorEx slide : upperSlides) {
-            slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            slide.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(5,0,0,0));
-            telemetry.addData("velo", velocity);
-            slide.setVelocity(velocity);
-        }
-    }
+    public double getUpperSlidesVelo() { return upperSlideRight.getLastVelocity(); }
 
     /**
      * @param pos [ticks]
      */
     public void setUpperSlidesPos(int pos) {
-        // TODO: PIDF - find F, also use external PID
-        int currentPos = getUpperSlidesPos();
-        pos = clip(pos, UPPER_SLIDES_BOTTOM, UPPER_SLIDES_TOP);
-
-        for (DcMotorEx slide : upperSlides) {
-            slide.setTargetPosition(pos);
-            slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            // TODO: test this
-            slide.setPower(0.9);
-//            slide.setVelocity( (pos > currentPos) ? VERT_SLIDES_DEFAULT_SPEED : 0.8*VERT_SLIDES_DEFAULT_SPEED);
-        }
+        upperSlideRight.setTargetPositionEx(pos);
+        upperSlideLeft.setTargetPositionEx(pos);
+    }
+    public void setUpperSlidesVelocity(double velocity) { // ticks/s
+        upperSlideRight.setTargetVelocityEx(velocity);
+        upperSlideLeft.setTargetVelocityEx(velocity);
     }
     //endregion
 
@@ -344,115 +319,182 @@ public class JamalTwo extends MecanumDrive {
 
     //region Lower Claw Yaw
     public double getLowerClawYawPos()   { return lowerClawYaw.getPosition(); }
-    public void setLowerClawYawPos(double pos)   { lowerClawYaw.setPosition(clip(pos, LOWER_CLAW_VERTICAL, LOWER_CLAW_HORIZONTAL_FLIPPED)); }
+    public void setLowerClawYawPos(double pos)   { lowerClawYaw.setPosition(clip(pos, 0, 1)); }
     //endregion
 
     // --------------------------------- CONTROL MACROS --------------------------------------
 
-    //region Sample Transfer
-    private enum TransferState { INACTIVE,  START, RETRACTING_SLIDES, TRANSFERRING }
+    public boolean allMacrosInactive() {
+        return
+                transferState == TransferState.INACTIVE &&
+                prepareSpecimenPickupState == PrepareSpecimenPickupState.INACTIVE &&
+                prepareSampleDepositState == PrepareSampleDepositState.INACTIVE &&
+                prepareSamplePickupState == PrepareSamplePickupState.INACTIVE;
+    }
+
+    //region Transfer sample between claws
+    private enum TransferState { INACTIVE,  START, RAISING_ARM, RETRACTING_SLIDES, TRANSFERRING }
     private TransferState transferState = TransferState.INACTIVE;
     private final ElapsedTime transferTimer = new ElapsedTime();
-    private static double LOWER_SLIDES_RETRACT_DURATION = 0.5; // sec
+    public static double RAISE_UPPER_ARM_TRANSFER_DURATION = 0.3;
 
-    private void updateSampleTransferFSM() {
+    private void updateTransferFSM() {
         switch (transferState) {
             case INACTIVE:
                 break;
             case START:
-                if ( specimenPickupState == SpecimenPickupState.INACTIVE ) {
-                    setLowerClawPitchPos( LOWER_CLAW_PITCH_TRANSFER );
-                    setLowerClawYawPos(   LOWER_CLAW_YAW_TRANSFER   );
+                openUpperClaw();
+                setUpperSlidesPos( UPPER_SLIDES_TRANSFER );
+                setUpperArmPos( UPPER_ARM_TRANSFER );
 
-                    transferTimer.reset();
+                transferTimer.reset();
+                transferState = TransferState.RAISING_ARM;
+            case RAISING_ARM:
+                if (transferTimer.time() < RAISE_UPPER_ARM_TRANSFER_DURATION)
+                    break;
 
-                    if (getLowerSlidesPos() != LOWER_SLIDES_RETRACTED) {
-                        retractLowerSlides();
-                        transferState = TransferState.RETRACTING_SLIDES;
-                    } else {
-                        transferState = TransferState.TRANSFERRING;
-                    }
-                }
-                break;
-            case RETRACTING_SLIDES:
-                if (transferTimer.time() > LOWER_SLIDES_RETRACT_DURATION) {
-                    transferTimer.reset();
+                setUpperClawPitchPos( UPPER_CLAW_PITCH_TRANSFER );
+                setLowerClawPitchPos( LOWER_CLAW_PITCH_TRANSFER );
+                setLowerClawYawPos(   LOWER_CLAW_YAW_TRANSFER   );
+
+                transferTimer.reset();
+
+                if (getLowerSlidesPos() != LOWER_SLIDES_RETRACTED) {
+                    retractLowerSlides();
+                    transferState = TransferState.RETRACTING_SLIDES;
+                } else {
                     transferState = TransferState.TRANSFERRING;
                 }
                 break;
+            case RETRACTING_SLIDES:
+                if (transferTimer.time() < LOWER_SLIDES_RETRACT_DURATION)
+                    break;
+
+                transferTimer.reset();
+                transferState = TransferState.TRANSFERRING;
+                break;
             case TRANSFERRING:
-                // TODO:
+                closeUpperClaw();
+                openLowerClaw();
+                transferState = TransferState.INACTIVE;
                 break;
         }
     }
 
-    public void startSampleTransfer() {
-        transferState = TransferState.START;
+    public void startTransfer() {
+        if (allMacrosInactive())
+            transferState = TransferState.START;
     }
 
-    public void cancelSampleTransfer() {
+    public void cancelTransfer() {
         transferState = TransferState.INACTIVE;
     }
-
     //endregion
 
-    //region Specimen Pickup
-    private enum SpecimenPickupState { INACTIVE, START, RAISING_SLIDES, LOWERING_ARM }
-    private SpecimenPickupState specimenPickupState = SpecimenPickupState.INACTIVE;
-    private final ElapsedTime specimenPickupTimer = new ElapsedTime();
-    private static double UPPER_ARM_SWING_DURATION = 0.5; // seconds
+    //region Prepare Specimen Pickup
+    private enum PrepareSpecimenPickupState { INACTIVE, START, RAISING_SLIDES }
+    private PrepareSpecimenPickupState prepareSpecimenPickupState = PrepareSpecimenPickupState.INACTIVE;
 
-    private void updateSpecimenPickupFSM() {
-        switch (specimenPickupState) {
+    private void updatePrepareSpecimenPickupFSM() {
+        switch (prepareSpecimenPickupState) {
             case INACTIVE:
                 break;
             case START:
-                if ( transferState == TransferState.INACTIVE ) {
-                    setUpperSlidesPos(JamalTwo.UPPER_SLIDES_PICKUP_SPECIMEN);
-                    specimenPickupState = SpecimenPickupState.RAISING_SLIDES;
-                }
+                setUpperSlidesPos(JamalTwo.UPPER_SLIDES_PICKUP_SPECIMEN);
+                prepareSpecimenPickupState = PrepareSpecimenPickupState.RAISING_SLIDES;
                 break;
             case RAISING_SLIDES:
                 if ( getUpperSlidesPos() > UPPER_SLIDES_MIN_ARM_CLEARANCE) {
+                    openUpperClaw();
                     setUpperArmPos(UPPER_ARM_PICKUP_SPECIMEN);
-                    setUpperClawPos(UPPER_CLAW_PITCH_PICKUP_SPECIMEN);
-                    specimenPickupTimer.reset();
-                    specimenPickupState = SpecimenPickupState.LOWERING_ARM;
+                    setUpperClawPitchPos(UPPER_CLAW_PITCH_PICKUP_SPECIMEN);
+                    prepareSpecimenPickupState = PrepareSpecimenPickupState.INACTIVE;
                 }
-                break;
-            case LOWERING_ARM:
-                if ( specimenPickupTimer.time() > UPPER_ARM_SWING_DURATION)
-                    specimenPickupState = SpecimenPickupState.INACTIVE;
                 break;
         }
     }
 
-    public void startSpecimenPickup() {
-        specimenPickupState = SpecimenPickupState.START;
+    public void startPrepareSpecimenPickup() {
+        if (allMacrosInactive())
+            prepareSpecimenPickupState = PrepareSpecimenPickupState.START;
     }
 
-    public void cancelSpecimenPickup() {
-        specimenPickupState = SpecimenPickupState.INACTIVE;
+    public void cancelPrepareSpecimenPickup() {
+        prepareSpecimenPickupState = PrepareSpecimenPickupState.INACTIVE;
+    }
+    //endregion
+
+    //region Prepare Sample Pickup
+    private enum PrepareSamplePickupState { INACTIVE,  START, EXTENDING_SLIDES }
+    private PrepareSamplePickupState prepareSamplePickupState = PrepareSamplePickupState.INACTIVE;
+    private final ElapsedTime prepareSamplePickupTimer = new ElapsedTime();
+
+    private void updatePrepareSamplePickupFSM() {
+        switch (prepareSamplePickupState) {
+            case INACTIVE:
+                break;
+            case START:
+                extendLowerSlides();
+                prepareSamplePickupState = PrepareSamplePickupState.EXTENDING_SLIDES;
+                prepareSamplePickupTimer.reset();
+                break;
+            case EXTENDING_SLIDES:
+                if (prepareSamplePickupTimer.time() > LOWER_SLIDES_EXTEND_DURATION) {
+                    openLowerClaw();
+                    setLowerClawPitchPos( LOWER_CLAW_DOWN );
+                    setLowerClawYawPos(LOWER_CLAW_YAW_HORIZONTAL);
+                    prepareSamplePickupState = PrepareSamplePickupState.INACTIVE;
+                }
+                break;
+        }
     }
 
+    public void startPrepareSamplePickup() {
+        if (allMacrosInactive())
+            prepareSamplePickupState = PrepareSamplePickupState.START;
+    }
+
+    public void cancelPrepareSamplePickup() {
+        prepareSamplePickupState = PrepareSamplePickupState.INACTIVE;
+    }
     //endregion
 
     public void prepareSpecimenDeposit() {
-        setUpperSlidesPos(    UPPER_SLIDES_ABOVE_HIGH_CHAMBER );
-        setUpperArmPos(       UPPER_ARM_DEPOSIT_SPECIMEN      );
-        setUpperClawPitchPos(UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN);
+        if (!allMacrosInactive())
+            return;
+        setUpperSlidesPos(UPPER_SLIDES_DEPOSIT_SPECIMEN);
+        setUpperArmPos( UPPER_ARM_DEPOSIT_SPECIMEN );
+        setUpperClawPitchPos( UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN );
+
     }
 
-    public void prepareSamplePickup() {
-        extendLowerSlides();
-        setLowerClawPitchPos( LOWER_CLAW_DOWN       );
-        setLowerClawYawPos(   LOWER_CLAW_HORIZONTAL );
+    private enum PrepareSampleDepositState { INACTIVE, START, RAISING_SLIDES }
+    private PrepareSampleDepositState prepareSampleDepositState = PrepareSampleDepositState.INACTIVE;
+
+    public void updatePrepareSampleDepositFSM() {
+        switch (prepareSampleDepositState) {
+            case INACTIVE:
+                break;
+            case START:
+                setUpperSlidesPos( UPPER_SLIDES_DEPOSIT_SAMPLE );
+                setUpperArmPos(       UPPER_ARM_DEPOSIT_SAMPLE    );
+                setUpperClawPitchPos(UPPER_CLAW_PITCH_DEPOSIT_SAMPLE);
+                prepareSampleDepositState = PrepareSampleDepositState.RAISING_SLIDES;
+                break;
+            case RAISING_SLIDES:
+                if ( getUpperSlidesPos() > UPPER_SLIDES_DEPOSIT_SAMPLE * 0.97 ) {
+                    prepareSampleDepositState = PrepareSampleDepositState.INACTIVE;
+                }
+        }
     }
 
-    public void prepareSampleDeposit() {
-        setUpperSlidesPos(    UPPER_SLIDES_DEPOSIT_SAMPLE );
-        setUpperArmPos(       UPPER_ARM_DEPOSIT_SAMPLE    );
-        setUpperClawPitchPos(UPPER_CLAW_PITCH_DEPOSIT_SAMPLE);
+    public void startPrepareSampleDeposit() {
+        if (allMacrosInactive())
+            prepareSampleDepositState = PrepareSampleDepositState.START;
+    }
+
+    public void cancelPrepareSampleDeposit() {
+        prepareSampleDepositState = PrepareSampleDepositState.INACTIVE;
     }
 
 }

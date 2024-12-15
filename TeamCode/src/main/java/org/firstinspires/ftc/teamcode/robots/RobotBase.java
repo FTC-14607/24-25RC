@@ -54,7 +54,7 @@ public abstract class RobotBase {
         imu = hardwareMap.get(IMU.class, "imu");
 
         controlHubVoltage = controlHubVoltageSensor.getVoltage();
-        voltageScaler = Math.max(1.0, NORMAL_VOLTAGE / controlHubVoltage);
+        voltageScaler = NORMAL_VOLTAGE / controlHubVoltage;
     }
 
     /**

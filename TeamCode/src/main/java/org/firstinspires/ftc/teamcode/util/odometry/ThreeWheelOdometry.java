@@ -4,12 +4,14 @@ import com.arcrobotics.ftclib.command.OdometrySubsystem;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 
+import org.firstinspires.ftc.teamcode.util.hardware.Encoder;
+
 /**
  * Three-wheel odometry based localizer. Wraps FTCLib's odometry classes.
  */
 public class ThreeWheelOdometry implements RobotLocalizer {
 
-    private final MotorEncoder encoderLeft, encoderRight, encoderPerp;
+    private final Encoder encoderLeft, encoderRight, encoderPerp;
     private final double inchesPerTick;
 
     private final OdometrySubsystem odometry;
@@ -26,7 +28,7 @@ public class ThreeWheelOdometry implements RobotLocalizer {
      * @param wheelDiameter [inches] diameter of odometry wheels
      */
     public ThreeWheelOdometry(
-            MotorEncoder encoderLeft, MotorEncoder encoderRight, MotorEncoder encoderPerp,
+            Encoder encoderLeft, Encoder encoderRight, Encoder encoderPerp,
             double trackWidth, double centerWheelOffset, double ticksPerRotation, double wheelDiameter
     ) {
         this.encoderLeft = encoderLeft;

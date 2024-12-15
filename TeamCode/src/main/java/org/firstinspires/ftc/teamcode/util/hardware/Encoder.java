@@ -1,17 +1,14 @@
-package org.firstinspires.ftc.teamcode.util.odometry;
+package org.firstinspires.ftc.teamcode.util.hardware;
 
 import com.acmerobotics.roadrunner.util.NanoClock;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import org.firstinspires.ftc.teamcode.util.roadrunner.util.Encoder;
-
 /**
  * Mostly copied from org.firstinspires.ftc.teamcode.util.roadrunner.util.Encoder
  */
-public class MotorEncoder {
+public class Encoder {
     private final static int CPS_STEP = 0x10000;
 
     private static double inverseOverflow(double input, double estimate) {
@@ -43,25 +40,25 @@ public class MotorEncoder {
     private DcMotorEx motor;
     private NanoClock clock;
 
-    private MotorEncoder.Direction direction;
+    private Encoder.Direction direction;
 
     private int lastPosition;
     private int velocityEstimateIdx;
     private double[] velocityEstimates;
     private double lastUpdateTime;
 
-    public MotorEncoder(DcMotorEx motor, NanoClock clock) {
+    public Encoder(DcMotorEx motor, NanoClock clock) {
         this.motor = motor;
         this.clock = clock;
 
-        this.direction = MotorEncoder.Direction.FORWARD;
+        this.direction = Encoder.Direction.FORWARD;
 
         this.lastPosition = 0;
         this.velocityEstimates = new double[3];
         this.lastUpdateTime = clock.seconds();
     }
 
-    public MotorEncoder(DcMotorEx motor) {
+    public Encoder(DcMotorEx motor) {
         this(motor, NanoClock.system());
     }
 
@@ -74,7 +71,7 @@ public class MotorEncoder {
         // TODO: lets you manually set a position
     }
 
-    public MotorEncoder.Direction getDirection() {
+    public Encoder.Direction getDirection() {
         return direction;
     }
 
@@ -86,7 +83,7 @@ public class MotorEncoder {
      * Allows you to set the direction of the counts and velocity without modifying the motor's direction state
      * @param direction either reverse or forward depending on if encoder counts should be negated
      */
-    public void setDirection(MotorEncoder.Direction direction) {
+    public void setDirection(Encoder.Direction direction) {
         this.direction = direction;
     }
 

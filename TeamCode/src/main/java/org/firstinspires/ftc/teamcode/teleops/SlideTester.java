@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robots.JamalTwo;
+import org.firstinspires.ftc.teamcode.util.hardware.LinearSlideMotor;
 
 @Config
 @TeleOp(name = "Slide Tester", group = "Test")
@@ -35,17 +36,13 @@ public class SlideTester extends LinearOpMode {
             robot.update();
 
             if (gamepad1.right_trigger > 0) {
-                f += 0.0001;
-                veloPid.f += 0.0001;
-                for (DcMotorEx slide : robot.upperSlides) {
-                    slide.setVelocityPIDFCoefficients(p, i, d, f);
-                }
+                f += 0.0000001;
+                for (LinearSlideMotor slide : robot.upperSlides)
+                    slide.addF(f);
             } else if (gamepad1.left_trigger > 0) {
-                f -= 0.0001;
-                veloPid.f -= 0.0001;
-                for (DcMotorEx slide : robot.upperSlides) {
-                    slide.setVelocityPIDFCoefficients(p, i, d, f);
-                }
+                f -= 0.0000001;
+                for (LinearSlideMotor slide : robot.upperSlides)
+                    slide.addF(f);
             }
             else if (gamepad1.left_stick_button) {
                 for (DcMotorEx slide : robot.upperSlides)
@@ -68,16 +65,16 @@ public class SlideTester extends LinearOpMode {
                 slideVelo -= 0.1;
 
             if      (gamepad1.a)
-                robot.setUpperSlidesPos((int)slidePos);
+                robot.setUpperSlidesVelocity(0);
 
             else if (gamepad1.b) {
-                robot.upperSlideRight.setPower(1);
-                robot.upperSlideLeft.setPower(1);
+                robot.upperSlideRight.setPower(0.6);
+                robot.upperSlideLeft.setPower(0.6);
 //                robot.setUpperSlidesVelocity(slideVelo);
             }
             else if (gamepad1.x) {
-                robot.upperSlideRight.setPower(0);
-                robot.upperSlideLeft.setPower(0);
+                robot.upperSlideRight.setPower(-0.6);
+                robot.upperSlideLeft.setPower(-0.6);
 //                robot.setUpperSlidesVelocity(0);
             }
             else if (gamepad1.y)

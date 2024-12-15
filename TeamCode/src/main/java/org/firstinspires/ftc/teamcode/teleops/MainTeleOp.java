@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -14,29 +13,19 @@ import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 @TeleOp(name = "JamalTwo Main TeleOp", group = "Main")
 public class MainTeleOp extends LinearOpMode {
 
-    public static double UPPER_SLIDE_MAX_SPEED = 800; // ticks / sec
-    public static double LOWER_SLIDE_MAX_SPEED = 0.2; // servo position / sec
+    public static double UPPER_SLIDE_MAX_SPEED = 0.9; // power
+    public static double UPPER_ARM_MAX_SPEED = 0.3; // servo position / sec
+    public static double UPPER_CLAW_PITCH_MAX_SPEED = 0.4;
+    public static double LOWER_SLIDE_MAX_SPEED = 0.6; // servo position / sec
 
     JamalTwo robot;
-
     boolean showTelemetry = true;
-
-    boolean holdingUpperSlides = true;
-    int holdUpperSlidesPos = 0;
-    boolean upperClawOpen = true;
-    boolean lowerClawOpen = true;
-
-    ElapsedTime lowerSlidesVeloTimer = new ElapsedTime();
-
     ElapsedTime loopTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() {
         robot = new JamalTwo(this);
         robot.maxDrivePower = 0.9;
-
-        double horizontalSlidePos = JamalTwo.LOWER_SLIDES_RETRACTED;
-        int verticalSlidePos = JamalTwo.UPPER_SLIDES_BOTTOM;
 
         initPositions();
 
@@ -47,68 +36,75 @@ public class MainTeleOp extends LinearOpMode {
 
             // TODO: instead of passing a gamepad, make variables like upperClawInput and read
 
+            // TODO: macro cancels
             // semi-automated control
-            if      (gamepad2.a) {
-                robot.startSampleTransfer();
+            if      (gamepad1.left_bumper && gamepad1.right_bumper) {
+                robot.startTransfer();
             }
-            else if (gamepad2.b) {
-                robot.startSpecimenPickup();
+            else if (gamepad1.x) {
+                robot.startPrepareSamplePickup();
+            }
+
+            if      (gamepad2.b && gamepad2.left_stick_button) {
+                holdingUpperSlides = false;
+                robot.startPrepareSpecimenPickup();
+            }
+
+            else if (gamepad2.y) {
+                holdingUpperSlides = false;
+                robot.startPrepareSampleDeposit();
             }
             else if (gamepad2.x) {
-                robot.prepareSampleDeposit();
-            }
-            else if (gamepad2.y) {
-                robot.prepareSamplePickup();
-            }
-            else if (gamepad2.right_bumper) {
+                holdingUpperSlides = false;
                 robot.prepareSpecimenDeposit();
-            }
-            else if (gamepad2.left_bumper) {
             }
 
             // manual control of each individual part
-            controlUpperSlides(    gamepad2 );
-            controlUpperArm(       gamepad2 );
-            controlUpperClaw(      gamepad2 );
-            controlUpperClawPitch( gamepad2 );
+            if (robot.allMacrosInactive()) {
+                controlUpperSlides(gamepad2);
+                controlUpperArm(gamepad2);
+                controlUpperClaw(gamepad2);
+                controlUpperClawPitch(gamepad2);
 
-//            controlLowerSlides(    gamepad1 );
-            controlLowerClaw(      gamepad1 );
-            controlLowerClawPitch( gamepad1 );
-            controlLowerClawYaw(   gamepad1 );
+                controlLowerSlides(gamepad1);
+                controlLowerClaw(gamepad1);
+                controlLowerClawPitch(gamepad1);
+                controlLowerClawYaw(gamepad1);
+            }
             controlDriveTrain(     gamepad1 );
 
 
             if (showTelemetry) {
-                telemetry.addData("Vertical Slide Position", robot.getUpperSlidesPos());
-                telemetry.addData("vert hold pos", holdUpperSlidesPos);
+                telemetry.addData("Upper Slide Hold Position", holdUpperSlidesPos);
                 telemetry.addData("Upper Arm Position", robot.getUpperArmPos());
-                telemetry.addData("Horizontal Slide Position", robot.getLowerSlidesPos());
+                telemetry.addData("Upper Claw Pitch", robot.getUpperClawPitchPos());
 
-                telemetry.addData("pos pid", robot.upperSlideRight.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION));
-                telemetry.addData("velo pid", robot.upperSlideRight.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
+                telemetry.addData("Lower Slide Position", robot.getLowerSlidesPos());
+                telemetry.addData("Lower Claw Pitch", robot.getLowerClawPitchPos());
 
                 telemetry.addData("Max Drive Power", robot.maxDrivePower);
                 telemetry.addData("Loop Speed", "%5.2f ms", loopTimer.time() * 1000);
                 telemetry.update();
             }
         }
-
     }
 
     public void initPositions() {
-
+        robot.upperSlideRight.brake();
+        robot.upperSlideLeft.brake();
+        robot.setUpperArmPos(JamalTwo.UPPER_ARM_REST);
     }
 
+    boolean holdingUpperSlides = false;
+    int holdUpperSlidesPos = 0;
     public void controlUpperSlides(Gamepad gamepad) {
         double input = -gamepad.left_stick_y;
 
         if (input != 0) {
-            double slideVelo = input * UPPER_SLIDE_MAX_SPEED;
-            telemetry.addData("slidevelo", slideVelo);
-//            for (DcMotorEx slide : robot.upperSlides)
-//                slide.setPower(slideVelo);
-            robot.setUpperSlidesVelocity(slideVelo);
+            double slidePower = input * UPPER_SLIDE_MAX_SPEED;
+
+            robot.upperSlideRight.setPowerEx(slidePower);
+            robot.upperSlideLeft.setPowerEx(slidePower);
 
             holdingUpperSlides = false;
         }
@@ -117,20 +113,118 @@ public class MainTeleOp extends LinearOpMode {
                 holdUpperSlidesPos = robot.getUpperSlidesPos();
                 holdingUpperSlides = true;
             }
-//            for (DcMotorEx slide : robot.upperSlides)
-//                slide.setPower(0);
             robot.setUpperSlidesPos(holdUpperSlidesPos);
         }
     }
 
+    public void controlUpperArm(Gamepad gamepad) {
+        double input = gamepad.right_trigger - gamepad.left_trigger;
+
+        if (input != 0) {
+            double deltaTime = loopTimer.time();
+
+            double nextArmPos = robot.getUpperArmPos() + input * deltaTime * UPPER_ARM_MAX_SPEED;
+            robot.setUpperArmPos(nextArmPos);
+        }
+    }
+
+    boolean upperClawFirstInput = true;
+    boolean upperClawIsOpen = false;
+    public void controlUpperClaw(Gamepad gamepad) {
+        boolean input = gamepad.a;
+
+        if (input) {
+            if (upperClawFirstInput) {
+                upperClawFirstInput = false;
+
+                if (upperClawIsOpen) { robot.closeUpperClaw(); upperClawIsOpen = false; }
+                else                 { robot.openUpperClaw();  upperClawIsOpen = true;  }
+            }
+        } else {
+            upperClawFirstInput = true;
+        }
+    }
+
+    public void controlUpperClawPitch(Gamepad gamepad) {
+        double input = gamepad.right_stick_y;
+
+        if (input != 0) {
+            double deltaTime = loopTimer.time();
+
+            double nextPitchPos = robot.getUpperClawPitchPos() + input * deltaTime * UPPER_CLAW_PITCH_MAX_SPEED;
+            robot.setUpperClawPitchPos(nextPitchPos);
+        }
+    }
+
     public void controlLowerSlides(Gamepad gamepad) {
-        double input = gamepad.right_stick_x;
+        double input = gamepad.right_trigger - gamepad.left_trigger;
 
-        double deltaTime = lowerSlidesVeloTimer.time(); // time since last iteration
-        double nextSlidePos = robot.getLowerSlidesPos() + input * deltaTime * LOWER_SLIDE_MAX_SPEED;
-        robot.setLowerSlidesPos(nextSlidePos);
+        if (input != 0) {
+            double deltaTime = loopTimer.time();
 
-        lowerSlidesVeloTimer.reset();
+            double nextSlidePos = robot.getLowerSlidesPos() + input * deltaTime * LOWER_SLIDE_MAX_SPEED;
+            robot.setLowerSlidesPos(nextSlidePos);
+        }
+    }
+
+    boolean lowerClawFirstInput = true;
+    boolean lowerClawIsOpen = false;
+    public void controlLowerClaw(Gamepad gamepad) {
+        boolean input = gamepad.a;
+
+        if (input) {
+            if (lowerClawFirstInput) {
+                lowerClawFirstInput = false;
+
+                if (lowerClawIsOpen) { robot.closeLowerClaw(); lowerClawIsOpen = false; }
+                else                 { robot.openLowerClaw();  lowerClawIsOpen = true;  }
+            }
+        } else {
+            lowerClawFirstInput = true;
+        }
+    }
+
+    boolean lowerClawPitchFirstInput = true;
+    boolean lowerClawIsDown = true;
+    public void controlLowerClawPitch(Gamepad gamepad) {
+        boolean input = gamepad.y;
+
+        if (input) {
+            if (lowerClawPitchFirstInput) {
+                lowerClawPitchFirstInput = false;
+
+                if (lowerClawIsDown) { robot.raiseLowerClaw(); lowerClawIsDown = false;  }
+                else                 { robot.lowerLowerClaw(); lowerClawIsDown = true; }
+            }
+        } else {
+            lowerClawPitchFirstInput = true;
+        }
+
+    }
+
+    boolean lowerClawYawFirstInput = true;
+    byte lowerClawYawPos = 0;
+    public void controlLowerClawYaw(Gamepad gamepad) {
+        boolean input = gamepad.b;
+
+        if (input) {
+            if (lowerClawYawFirstInput) {
+                lowerClawYawFirstInput = false;
+
+                lowerClawYawPos = (byte) ((lowerClawYawPos + 1) % 3);
+                switch(lowerClawYawPos) {
+                    case 0:
+                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_HORIZONTAL_FLIPPED); break;
+                    case 1:
+                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_45DEGREES); break;
+                    case 2:
+                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_VERTICAL); break;
+                }
+            }
+        } else {
+            lowerClawYawFirstInput = true;
+        }
+
     }
 
     public void controlDriveTrain(Gamepad gamepad) {
@@ -138,56 +232,24 @@ public class MainTeleOp extends LinearOpMode {
         // TODO: field centric
 
         // change max drive power
-        if      (gamepad.a) robot.maxDrivePower = 0.3;
-        else if (gamepad.b) robot.maxDrivePower = 0.5;
-        else if (gamepad.y) robot.maxDrivePower = 0.7;
-        else if (gamepad.x) robot.maxDrivePower = 0.9;
+        if      (gamepad.dpad_down) robot.maxDrivePower = 0.3;
+        else if (gamepad.dpad_left) robot.maxDrivePower = 0.5;
+        else if (gamepad.dpad_up) robot.maxDrivePower = 0.7;
+        else if (gamepad.dpad_right) robot.maxDrivePower = 0.9;
 
         // set drivetrain power (flipped cuz i thoguht thw wrong side was forward 3050 2075
-        double throttle = -gamepad.left_stick_y * -1;
-        double strafe   = -gamepad.left_stick_x;
+        double throttle = gamepad.left_stick_y * -1;
+        double strafe   = -gamepad.left_stick_x * -1;
         double rotate   = gamepad.right_stick_x;
 
-        // dpad for easy orthogonal movement
-        if      (gamepad.dpad_up)    throttle =  1;
-        else if (gamepad.dpad_down)  throttle = -1;
-        else if (gamepad.dpad_right) strafe   =  1;
-        else if (gamepad.dpad_left)  strafe   = -1;
+//        // dpad for easy orthogonal movement
+//        if      (gamepad.dpad_up)    throttle =  1;
+//        else if (gamepad.dpad_down)  throttle = -1;
+//        else if (gamepad.dpad_right) strafe   =  1;
+//        else if (gamepad.dpad_left)  strafe   = -1;
 
         // TODO: setup rotation corrections
 
         robot.drive(throttle, strafe, rotate);
     }
-
-    public void controlUpperArm(Gamepad gamepad) {
-
-    }
-
-    public void controlUpperClaw(Gamepad gamepad) {
-        if (gamepad.dpad_up) {
-            if (upperClawOpen) { robot.closeUpperClaw(); upperClawOpen = false; }
-            else               { robot.openUpperClaw();  upperClawOpen = true;  }
-        }
-    }
-
-    public void controlUpperClawPitch(Gamepad gamepad) {
-
-    }
-
-
-    public void controlLowerClaw(Gamepad gamepad) {
-        if (gamepad.dpad_down) {
-            if (lowerClawOpen) { robot.closeLowerClaw(); lowerClawOpen = false; }
-            else               { robot.openLowerClaw();  lowerClawOpen = true;  }
-        }
-    }
-
-    public void controlLowerClawPitch(Gamepad gamepad) {
-
-    }
-
-    public void controlLowerClawYaw(Gamepad gamepad) {
-
-    }
-
 }

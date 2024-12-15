@@ -5,18 +5,18 @@ import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.util.hardware.Encoder;
 import org.firstinspires.ftc.teamcode.util.odometry.ThreeWheelOdometry;
 import org.firstinspires.ftc.teamcode.util.odometry.MecanumThreeWheelOdometryDriver;
-import org.firstinspires.ftc.teamcode.util.odometry.MotorEncoder;
 import org.firstinspires.ftc.teamcode.util.odometry.AutoDriver;
 
 @Config
 public class Outreach extends MecanumDrive {
 
     // actuators and sensors
-    public MotorEncoder odoRight;
-    public MotorEncoder odoLeft;
-    public MotorEncoder odoPerp;
+    public Encoder odoRight;
+    public Encoder odoLeft;
+    public Encoder odoPerp;
 
     // controllers
     public static double p_yaw = 0.60, i_yaw = 0, d_yaw = 0;
@@ -52,12 +52,12 @@ public class Outreach extends MecanumDrive {
         STRAFE_ROTATION_CORRECTION = 0;
 
         // hardwareMap
-        odoRight = new MotorEncoder(frontLeft); // encoders are plugged in next to motors
-        odoLeft =  new MotorEncoder(backRight);
-        odoPerp =  new MotorEncoder(frontRight);
+        odoRight = new Encoder(frontLeft); // encoders are plugged in next to motors
+        odoLeft =  new Encoder(backRight);
+        odoPerp =  new Encoder(frontRight);
 
-        odoLeft.setDirection(MotorEncoder.Direction.REVERSE);
-//        odoPerp.setDirection(MotorEncoder.Direction.REVERSE);
+        odoLeft.setDirection(Encoder.Direction.REVERSE);
+//        odoPerp.setDirection(Encoder.Direction.REVERSE);
 
         odo = new ThreeWheelOdometry(
                 odoLeft, odoRight, odoPerp,
