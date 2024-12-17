@@ -36,20 +36,20 @@ public class MainTeleOp extends LinearOpMode {
 
             // TODO: instead of passing a gamepad, make variables like upperClawInput and read
 
-            // TODO: macro cancels
             // semi-automated control
-            if      (gamepad1.left_bumper && gamepad1.right_bumper) {
+            if (gamepad1.start || gamepad2.start) {
+                robot.cancelAllMacros();
+            }
+            else if (gamepad1.left_bumper && gamepad1.right_bumper) {
                 robot.startTransfer();
             }
             else if (gamepad1.x) {
                 robot.startPrepareSamplePickup();
             }
-
-            if      (gamepad2.b && gamepad2.left_stick_button) {
+            else if (gamepad2.b && gamepad2.left_stick_button) {
                 holdingUpperSlides = false;
                 robot.startPrepareSpecimenPickup();
             }
-
             else if (gamepad2.y) {
                 holdingUpperSlides = false;
                 robot.startPrepareSampleDeposit();
@@ -60,19 +60,19 @@ public class MainTeleOp extends LinearOpMode {
             }
 
             // manual control of each individual part
-            if (robot.allMacrosInactive()) {
-                controlUpperSlides(gamepad2);
-                controlUpperArm(gamepad2);
-                controlUpperClaw(gamepad2);
-                controlUpperClawPitch(gamepad2);
+            controlDriveTrain(gamepad1);
 
+            if (robot.allMacrosInactive()) {
                 controlLowerSlides(gamepad1);
                 controlLowerClaw(gamepad1);
                 controlLowerClawPitch(gamepad1);
                 controlLowerClawYaw(gamepad1);
-            }
-            controlDriveTrain(     gamepad1 );
 
+                controlUpperSlides(gamepad2);
+                controlUpperArm(gamepad2);
+                controlUpperClaw(gamepad2);
+                controlUpperClawPitch(gamepad2);
+            }
 
             if (showTelemetry) {
                 telemetry.addData("Upper Slide Hold Position", holdUpperSlidesPos);
@@ -108,12 +108,11 @@ public class MainTeleOp extends LinearOpMode {
 
             holdingUpperSlides = false;
         }
-        else {
-            if ( !holdingUpperSlides ) {
-                holdUpperSlidesPos = robot.getUpperSlidesPos();
-                holdingUpperSlides = true;
-            }
+        else if (!holdingUpperSlides){
+            holdUpperSlidesPos = robot.getUpperSlidesPos();
             robot.setUpperSlidesPos(holdUpperSlidesPos);
+
+            holdingUpperSlides = true;
         }
     }
 
@@ -203,7 +202,7 @@ public class MainTeleOp extends LinearOpMode {
     }
 
     boolean lowerClawYawFirstInput = true;
-    byte lowerClawYawPos = 0;
+    int lowerClawYawPos = 0;
     public void controlLowerClawYaw(Gamepad gamepad) {
         boolean input = gamepad.b;
 
@@ -211,14 +210,16 @@ public class MainTeleOp extends LinearOpMode {
             if (lowerClawYawFirstInput) {
                 lowerClawYawFirstInput = false;
 
-                lowerClawYawPos = (byte) ((lowerClawYawPos + 1) % 3);
+                lowerClawYawPos = (lowerClawYawPos + 1) % 4;
                 switch(lowerClawYawPos) {
                     case 0:
                         robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_HORIZONTAL_FLIPPED); break;
                     case 1:
-                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_45DEGREES); break;
+                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_135DEGREES); break;
                     case 2:
                         robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_VERTICAL); break;
+                    case 3:
+                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_45DEGREES); break;
                 }
             }
         } else {

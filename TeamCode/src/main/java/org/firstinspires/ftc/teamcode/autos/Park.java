@@ -16,10 +16,8 @@ public class Park extends LinearOpMode {
 
         waitForStart();
 
-        robot.drive(0.7,0,0);
-        sleep(600);
-
-        robot.drive(0,0,0);
-
+        robot.drive(0.6,0,0);
+        sleep(2000);
+        robot.brake();
     }
 }

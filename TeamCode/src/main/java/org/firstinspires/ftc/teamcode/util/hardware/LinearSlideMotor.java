@@ -101,8 +101,8 @@ public class LinearSlideMotor extends DcMotorImplEx {
                 // prevent changing velocity when near the bounds
                 double feedBackPower = velocityFeedbackController.calculate(currentVelocity);
                 if (
-                        currentPosition < bottomPosition*1.01 && feedBackPower < 0 ||
-                        currentPosition > topPosition   *0.99 && feedBackPower > 0
+                        currentPosition <= bottomPosition && feedBackPower < 0 ||
+                        currentPosition >= topPosition    && feedBackPower > 0
                 ) {
                     feedBackPower = 0;
                 }

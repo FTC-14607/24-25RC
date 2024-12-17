@@ -42,13 +42,10 @@ public class JamalTwo extends MecanumDrive {
     //endregion
     //region control
     public LinearSlideMotor[] upperSlides;
-    public int upperSlideRightPos, upperSlideLeftPos, upperSlidesPos;
-    public double upperSlideRightVelo, upperSlideLeftVelo;
-    public double upperSlidesTargetPosition;
-    public double upperSlidesTargetVelocity;
+    public int upperSlidesPos;
     public double upperSlidesMaxPower = 0.9;
-
-    public static PIDFCoefficients upperSlidesVelocityPIDFCoefficients = new PIDFCoefficients(0.00032,0.0,0.0,0.00005);
+    public static PIDFCoefficients upperSlidesVelocityPIDFCoefficients =
+            new PIDFCoefficients(0.00032,0.0,0.0,0.00005);
     public static double upperSlidesPositionGain = 3;
 
     public Servo[] lowerSlides;
@@ -64,52 +61,63 @@ public class JamalTwo extends MecanumDrive {
     //region constants
     public static double TRACK_WIDTH = 8.2087;    // 20.85 cm TODO
     public static double CENTER_WHEEL_OFFSET = 0; // 0 cm TODO
-    public final static double ODO_TICKS_PER_ROTATION = 2000;
+    public final static int ODO_TICKS_PER_ROTATION = 2000;
     public final static double ODO_WHEEL_DIAMETER = centimetersToInches(48. / 10);
 
-    public static int UPPER_SLIDES_BOTTOM = 0; // ticks
-    public static int UPPER_SLIDES_TOP = 4550;
-    public static int UPPER_SLIDES_TRANSFER = 0;
-    public static int UPPER_SLIDES_MIN_ARM_CLEARANCE = 1700; // minimum height at which the upper arm can go fully down
-    public static int UPPER_SLIDES_PICKUP_SPECIMEN = 1860;
-    public static int UPPER_SLIDES_DEPOSIT_SPECIMEN = UPPER_SLIDES_TOP;
-    public static int UPPER_SLIDES_DEPOSIT_SAMPLE = 2950;
-
+    public final static int
+        UPPER_SLIDES_BOTTOM = 0, // ticks
+        UPPER_SLIDES_TOP = 4550,
+        UPPER_SLIDES_TRANSFER = 0,
+        UPPER_SLIDES_MIN_ARM_CLEARANCE = 1700, // minimum height at which the upper arm can go fully down
+        UPPER_SLIDES_PICKUP_SPECIMEN = 1860,
+        UPPER_SLIDES_DEPOSIT_SPECIMEN = UPPER_SLIDES_TOP,
+        UPPER_SLIDES_DEPOSIT_SAMPLE = 2950;
     public static double UPPER_SLIDES_DEFAULT_SPEED = 100;
     public static double UPPER_SLIDES_INCHES_TO_TICKS = -1;
 
-    public static double UPPER_ARM_LOWERED = 0.02; // servo position [0, 1]
-    public static double UPPER_ARM_RAISED = 1;
-    public static double UPPER_ARM_REST = 0.466;
-    public static double UPPER_ARM_TRANSFER = 0.63;
-    public static double UPPER_ARM_PICKUP_SPECIMEN = 0.04;
-    public static double UPPER_ARM_DEPOSIT_SPECIMEN = 0.04;
-    public static double UPPER_ARM_DEPOSIT_SAMPLE = 1;
+    public final static double
+        UPPER_ARM_LOWERED = 0.02, // servo position [0, 1]
+        UPPER_ARM_RAISED = 1,
+        UPPER_ARM_REST = 0.466,
+        UPPER_ARM_TRANSFER = 0.55,
+        UPPER_ARM_PICKUP_SPECIMEN = 0.04,
+        UPPER_ARM_DEPOSIT_SPECIMEN = 0.04,
+        UPPER_ARM_DEPOSIT_SAMPLE = 1;
 
-    public static double UPPER_CLAW_CLOSED = 0.862;
-    public static double UPPER_CLAW_OPEN = 0.735;
-    public static double UPPER_CLAW_DOWN = 0;
-    public static double UPPER_CLAW_UP = 1;
-    public static double UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.282;
-    public static double UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.282;
-    public static double UPPER_CLAW_PITCH_DEPOSIT_SAMPLE = 0.5428;
-    public static double UPPER_CLAW_PITCH_TRANSFER = 0.3228;
+    public final static double
+        UPPER_CLAW_CLOSED = 0.862,
+        UPPER_CLAW_OPEN = 0.735;
 
-    public static double LOWER_SLIDES_RETRACTED = 0.1522;
-    public static double LOWER_SLIDES_EXTENDED = 0.422;
-    public static double LOWER_SLIDES_RETRACT_DURATION = 0.7; // sec
-    public static double LOWER_SLIDES_EXTEND_DURATION = 0.3;
+    public final static double
+        UPPER_CLAW_DOWN = 0,
+        UPPER_CLAW_UP = 1,
+        UPPER_CLAW_PITCH_TRANSFER = 0.3228,
+        UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.282,
+        UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.282,
+        UPPER_CLAW_PITCH_DEPOSIT_SAMPLE = 0.5428;
 
-    public static double LOWER_CLAW_CLOSED = 0.83;
-    public static double LOWER_CLAW_OPEN = 0.55;
-    public static double LOWER_CLAW_YAW_HORIZONTAL = 0.0574; // to pick up vertical samples
-    public static double LOWER_CLAW_YAW_45DEGREES = 0.5433;
-    public static double LOWER_CLAW_YAW_VERTICAL = 0.3786;
-    public static double LOWER_CLAW_YAW_HORIZONTAL_FLIPPED = 0.708;
-    public static double LOWER_CLAW_DOWN = 0.415;
-    public static double LOWER_CLAW_UP = 1;
-    public static double LOWER_CLAW_PITCH_TRANSFER = LOWER_CLAW_UP;
-    public static double LOWER_CLAW_YAW_TRANSFER = LOWER_CLAW_YAW_HORIZONTAL_FLIPPED;
+    public final static double
+        LOWER_SLIDES_RETRACTED = 0.1522,
+        LOWER_SLIDES_EXTENDED = 0.422,
+        LOWER_SLIDES_RETRACT_DURATION = 0.7, // sec
+        LOWER_SLIDES_EXTEND_DURATION = 0.3;
+
+    public final static double
+        LOWER_CLAW_CLOSED = 0.83,
+        LOWER_CLAW_OPEN = 0.55;
+
+    public final static double
+        LOWER_CLAW_YAW_HORIZONTAL = 0.0574, // to pick up vertical samples
+        LOWER_CLAW_YAW_45DEGREES = 0.218,
+        LOWER_CLAW_YAW_VERTICAL = 0.3786,
+        LOWER_CLAW_YAW_135DEGREES = 0.5433,
+        LOWER_CLAW_YAW_HORIZONTAL_FLIPPED = 0.708,
+        LOWER_CLAW_YAW_TRANSFER = LOWER_CLAW_YAW_HORIZONTAL_FLIPPED;
+
+    public final static double
+        LOWER_CLAW_DOWN = 0.415,
+        LOWER_CLAW_UP = 1,
+        LOWER_CLAW_PITCH_TRANSFER = LOWER_CLAW_UP;
     //endregion
 
     public JamalTwo(LinearOpMode opmode) {
@@ -189,7 +197,7 @@ public class JamalTwo extends MecanumDrive {
     // ------------------------------------ CONTROL & SENSORS ----------------------------------------
 
     /**
-     * Re-reads all sensors and updates FSM loops
+     * Re-reads all sensors and updates all finite-state machines
      */
     public void update() {
         updatePose();
@@ -254,9 +262,8 @@ public class JamalTwo extends MecanumDrive {
     //endregion
 
     //region Upper Arm
-
-    public void raiseArm()           { setUpperArmPos(UPPER_ARM_RAISED); }
-    public void lowerArm()           { setUpperArmPos(UPPER_ARM_LOWERED); }
+    public void raiseArm() { setUpperArmPos(UPPER_ARM_RAISED); }
+    public void lowerArm() { setUpperArmPos(UPPER_ARM_LOWERED); }
 
     public double getUpperArmPos() {
         return upperArmRight.getPosition();
@@ -269,18 +276,16 @@ public class JamalTwo extends MecanumDrive {
     //endregion
 
     //region Upper Claw
+    public void closeUpperClaw() { setUpperClawPos(UPPER_CLAW_CLOSED); }
+    public void openUpperClaw()  { setUpperClawPos(UPPER_CLAW_OPEN); }
 
-    public void closeUpperClaw()     { setUpperClawPos(UPPER_CLAW_CLOSED); }
-    public void openUpperClaw()      { setUpperClawPos(UPPER_CLAW_OPEN); }
-
-    public double getUpperClawPos()      { return upperClaw.getPosition(); }
-    public void setUpperClawPos(double pos)      { upperClaw.setPosition(clip(pos, UPPER_CLAW_OPEN, UPPER_CLAW_CLOSED)); }
+    public double getUpperClawPos() { return upperClaw.getPosition(); }
+    public void setUpperClawPos(double pos) { upperClaw.setPosition(clip(pos, UPPER_CLAW_OPEN, UPPER_CLAW_CLOSED)); }
     //endregion
 
     //region Upper Claw Pitch
-
-    public void raiseUpperClaw()     { setUpperClawPitchPos(UPPER_CLAW_UP); }
-    public void lowerUpperClaw()     { setUpperClawPitchPos(UPPER_CLAW_DOWN); }
+    public void raiseUpperClaw() { setUpperClawPitchPos(UPPER_CLAW_UP); }
+    public void lowerUpperClaw() { setUpperClawPitchPos(UPPER_CLAW_DOWN); }
 
     public double getUpperClawPitchPos() { return upperClawPitch.getPosition(); }
     public void setUpperClawPitchPos(double pos) { upperClawPitch.setPosition(clip(pos, UPPER_CLAW_DOWN, UPPER_CLAW_UP)); }
@@ -302,24 +307,24 @@ public class JamalTwo extends MecanumDrive {
     //endregion
 
     //region Lower Claw
-    public void closeLowerClaw()     { setLowerClawPos(LOWER_CLAW_CLOSED); }
-    public void openLowerClaw()      { setLowerClawPos(LOWER_CLAW_OPEN); }
+    public void closeLowerClaw() { setLowerClawPos(LOWER_CLAW_CLOSED); }
+    public void openLowerClaw()  { setLowerClawPos(LOWER_CLAW_OPEN); }
 
-    public double getLowerClawPos()      { return lowerClaw.getPosition(); }
-    public void setLowerClawPos(double pos)      { lowerClaw.setPosition(clip(pos, LOWER_CLAW_CLOSED, LOWER_CLAW_OPEN)); }
+    public double getLowerClawPos() { return lowerClaw.getPosition(); }
+    public void setLowerClawPos(double pos) { lowerClaw.setPosition(clip(pos, LOWER_CLAW_CLOSED, LOWER_CLAW_OPEN)); }
     //endregion
 
     //region Lower Claw Pitch
-    public void lowerLowerClaw()     { setLowerClawPitchPos(LOWER_CLAW_DOWN); }
-    public void raiseLowerClaw()     { setLowerClawPitchPos(LOWER_CLAW_UP); }
+    public void lowerLowerClaw() { setLowerClawPitchPos(LOWER_CLAW_DOWN); }
+    public void raiseLowerClaw() { setLowerClawPitchPos(LOWER_CLAW_UP); }
 
     public double getLowerClawPitchPos() { return lowerClawPitch.getPosition(); }
     public void setLowerClawPitchPos(double pos) { lowerClawPitch.setPosition(clip(pos, LOWER_CLAW_DOWN, LOWER_CLAW_UP)); }
     //endregion
 
     //region Lower Claw Yaw
-    public double getLowerClawYawPos()   { return lowerClawYaw.getPosition(); }
-    public void setLowerClawYawPos(double pos)   { lowerClawYaw.setPosition(clip(pos, 0, 1)); }
+    public double getLowerClawYawPos() { return lowerClawYaw.getPosition(); }
+    public void setLowerClawYawPos(double pos) { lowerClawYaw.setPosition(clip(pos, 0, 1)); }
     //endregion
 
     // --------------------------------- CONTROL MACROS --------------------------------------
@@ -330,6 +335,13 @@ public class JamalTwo extends MecanumDrive {
                 prepareSpecimenPickupState == PrepareSpecimenPickupState.INACTIVE &&
                 prepareSampleDepositState == PrepareSampleDepositState.INACTIVE &&
                 prepareSamplePickupState == PrepareSamplePickupState.INACTIVE;
+    }
+
+    public void cancelAllMacros() {
+        cancelTransfer();
+        cancelPrepareSpecimenPickup();
+        cancelPrepareSamplePickup();
+        cancelPrepareSampleDeposit();
     }
 
     //region Transfer sample between claws
@@ -459,15 +471,7 @@ public class JamalTwo extends MecanumDrive {
     }
     //endregion
 
-    public void prepareSpecimenDeposit() {
-        if (!allMacrosInactive())
-            return;
-        setUpperSlidesPos(UPPER_SLIDES_DEPOSIT_SPECIMEN);
-        setUpperArmPos( UPPER_ARM_DEPOSIT_SPECIMEN );
-        setUpperClawPitchPos( UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN );
-
-    }
-
+    //region Prepare Sample Deposit
     private enum PrepareSampleDepositState { INACTIVE, START, RAISING_SLIDES }
     private PrepareSampleDepositState prepareSampleDepositState = PrepareSampleDepositState.INACTIVE;
 
@@ -482,7 +486,7 @@ public class JamalTwo extends MecanumDrive {
                 prepareSampleDepositState = PrepareSampleDepositState.RAISING_SLIDES;
                 break;
             case RAISING_SLIDES:
-                if ( getUpperSlidesPos() > UPPER_SLIDES_DEPOSIT_SAMPLE * 0.97 ) {
+                if ( getUpperSlidesPos() > UPPER_SLIDES_DEPOSIT_SAMPLE ) {
                     prepareSampleDepositState = PrepareSampleDepositState.INACTIVE;
                 }
         }
@@ -495,6 +499,16 @@ public class JamalTwo extends MecanumDrive {
 
     public void cancelPrepareSampleDeposit() {
         prepareSampleDepositState = PrepareSampleDepositState.INACTIVE;
+    }
+    //endregion
+
+    public void prepareSpecimenDeposit() {
+        if (!allMacrosInactive())
+            return;
+        setUpperSlidesPos(UPPER_SLIDES_DEPOSIT_SPECIMEN);
+        setUpperArmPos( UPPER_ARM_DEPOSIT_SPECIMEN );
+        setUpperClawPitchPos( UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN );
+
     }
 
 }
