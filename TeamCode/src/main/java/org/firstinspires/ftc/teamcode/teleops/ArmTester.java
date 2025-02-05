@@ -6,98 +6,68 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.robots.JamalThree;
 import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 
-@TeleOp(name = "Acuatator Tester", group = "Test")
-public class ActuatorTester extends LinearOpMode {
-
-    JamalTwo robot;
-    ElapsedTime loopTimer = new ElapsedTime();
-
-    public enum ArmState {
-        RETRACTED,
-        EXTENDING_HORIZONTAL,
-        EXTENDING_VERTICAL
-    }
-
-    public ArmState armState = ArmState.RETRACTED;
-
+@TeleOp(name = "Arm Tester", group = "Test")
+public class ArmTester extends LinearOpMode {
     public static final double STRAIGHT_CORRECTION = 0.0;
 
+    JamalThree robot;
+    ElapsedTime loopTimer = new ElapsedTime();
+
     public void runOpMode() {
-        robot = new JamalTwo(this);
-        double servoPos = 0;
-        robot.maxDrivePower = 0.9;
-        int slidePos = 0;
+        robot = new JamalThree(this);
+
+        double motorPos = 0;
 
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
             robot.update();
 
-            if      (gamepad2.right_trigger > 0) servoPos = Math.min(1, servoPos + 0.0002);
-            else if (gamepad2.left_trigger  > 0) servoPos = Math.max(0, servoPos - 0.0002);
+            if      (gamepad2.right_trigger > 0) motorPos = Math.min(600, motorPos + 0.02);
+            else if (gamepad2.left_trigger  > 0) motorPos = Math.max(0, motorPos - 0.02);
 
             if (gamepad2.a) {
                 if (gamepad2.dpad_down) {
-                    JamalTwo.setRunMode(robot.upperSlides, DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    robot.upperArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 } else if (gamepad2.right_trigger > 0) {
-                    robot.upperSlideRight.setPowerEx(0.3);
-                    robot.upperSlideLeft.setPowerEx(0.3);
+                    robot.upperArm.setPowerEx(0.3);
                 } else if (gamepad2.left_trigger > 0) {
-                    robot.upperSlideRight.setPowerEx(-0.3);
-                    robot.upperSlideLeft.setPowerEx(-0.3);
+                    robot.upperArm.setPowerEx(-0.3);
                 } else {
-                    robot.upperSlideRight.brake();
-                    robot.upperSlideLeft.brake();
+                    robot.upperArm.brake();
                 }
             }
 
             else if (gamepad2.b) {
                 if (gamepad2.dpad_up) {
-                    robot.lowerSlideRight.setPosition(servoPos);
+                    robot.setUpperArmPos((int)motorPos);
                 } else if (gamepad2.dpad_right) {
-                    robot.lowerSlideLeft.setPosition(servoPos);
                 } else if (gamepad2.dpad_left) {
-                    robot.setLowerSlidesPos(servoPos);
                 }
 
             }
 
             else if (gamepad2.y) {
                 if (gamepad2.dpad_up) {
-                    robot.upperClaw.setPosition(servoPos);
                 } else if (gamepad2.dpad_down) {
-                    robot.setUpperArmPos(servoPos);
                 } else if (gamepad2.dpad_right) {
-                    robot.upperClawPitch.setPosition(servoPos);
                 }
             }
 
             else if (gamepad2.x) {
-
                 if (gamepad2.dpad_up) {
-                    robot.lowerClaw.setPosition(servoPos);
                 } else if (gamepad2.dpad_left) {
-                    robot.lowerClawYaw.setPosition(servoPos);
                 } else if (gamepad2.dpad_down) {
-                    robot.lowerClawPitch.setPosition(servoPos);
                 }
             }
 
             moveDriveTrain(gamepad1);
 
-            telemetry.addData("servoPos", servoPos);
-            telemetry.addData("slidePos", slidePos);
-
-            telemetry.addData("Vertical Slide Position", robot.getUpperSlidesPos());
-            telemetry.addData("Horizontal Slide Position", robot.getLowerSlidesPos());
+            telemetry.addData("slidePos", motorPos);
             telemetry.addData("Upper Arm Position", robot.getUpperArmPos());
-            telemetry.addData("Upper Claw Position", robot.getUpperClawPos());
-            telemetry.addData("Upper Claw Pitch Position", robot.getUpperClawPitchPos());
-            telemetry.addData("Lower Claw Position", robot.getLowerClawPos());
-            telemetry.addData("Lower Claw Yaw Posiition", robot.getLowerClawYawPos());
-            telemetry.addData("Lower Claw Pitch Position", robot.getLowerClawPitchPos());
 
             telemetry.addData("Max Drive Power", robot.maxDrivePower);
             telemetry.addData("Loop Speed", "%5.2f ms", loopTimer.time() * 1000);

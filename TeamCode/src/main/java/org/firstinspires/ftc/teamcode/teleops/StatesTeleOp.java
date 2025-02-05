@@ -3,15 +3,14 @@ package org.firstinspires.ftc.teamcode.teleops;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 
 @Config
-@TeleOp(name = "JamalTwo Main TeleOp", group = "Main")
-public class MainTeleOp extends LinearOpMode {
+@TeleOp(name = "JamalThree Main TeleOp", group = "Main")
+public class StatesTeleOp extends LinearOpMode {
 
     public static double UPPER_SLIDE_MAX_SPEED = 0.9; // power
     public static double UPPER_ARM_MAX_SPEED = 0.3; // servo position / sec
