@@ -25,7 +25,7 @@ public class JamalThree extends MecanumDrive {
     // * drivetrain: goBILDA 96mm Mecanum Wheels and goBILDA 5203 312 RPM Motors
     public LinearSlideMotor upperSlideRight; // goBILDA 5203 312 RPM
     public LinearSlideMotor upperSlideLeft;  // same
-    public ArmMotor upperArm; // goBILDA
+    public ArmMotor upperArm; // goBILDA 5203 117 RPM
     public Servo upperClaw;       // goBILDA Torque
     public Servo upperClawPitch;  // same
 
@@ -42,10 +42,17 @@ public class JamalThree extends MecanumDrive {
     //region control
     public LinearSlideMotor[] upperSlides;
     public int upperSlidesPos;
-    public double upperSlidesMaxPower = 0.9;
+    public static double upperSlidesMaxPower = 0.9;
+    // The slide PID is tuned so that the velocity almost always lags behind the target velocity, because oscillations
+    // are very bad
     public static PIDFCoefficients upperSlidesVelocityPIDFCoefficients =
             new PIDFCoefficients(0.00032,0.0,0.0,0.00005);
     public static double upperSlidesPositionGain = 3;
+
+    public static double upperArmMaxPower = 0.6;
+    public static PIDFCoefficients upperArmVelocityPIDFCOefficients =
+            new PIDFCoefficients(0.0005, 0, 0, 0.15);
+    public static double upperArmPositionGain = 8;
 
     public Servo[] lowerSlides;
 
@@ -67,45 +74,46 @@ public class JamalThree extends MecanumDrive {
         UPPER_SLIDES_BOTTOM = 0, // ticks
         UPPER_SLIDES_TOP = 4550,
         UPPER_SLIDES_TRANSFER = 0,
-        UPPER_SLIDES_MIN_ARM_CLEARANCE = 1700, // minimum height at which the upper arm can go fully down
-        UPPER_SLIDES_PICKUP_SPECIMEN = 1860,
-        UPPER_SLIDES_DEPOSIT_SPECIMEN = UPPER_SLIDES_TOP,
+        UPPER_SLIDES_MIN_ARM_CLEARANCE = 1000, // minimum height at which the upper arm can go fully down
+        UPPER_SLIDES_PICKUP_SPECIMEN = 1080,
+        UPPER_SLIDES_DEPOSIT_SPECIMEN = 1080,
         UPPER_SLIDES_DEPOSIT_SAMPLE = 2950;
     public static double UPPER_SLIDES_DEFAULT_SPEED = 100;
     public static double UPPER_SLIDES_INCHES_TO_TICKS = -1;
 
-    public static double UPPER_ARM_TICKS_PER_ROTATION;
+    public static double UPPER_ARM_TICKS_PER_ROTATION = 1425.059231;
     public static int
-        UPPER_ARM_HORIZONTAL = 0,
-        UPPER_ARM_LOWERED = 0, // servo position [0, 1]
-        UPPER_ARM_RAISED = 100,
-        UPPER_ARM_REST = 150,
-        UPPER_ARM_TRANSFER = 200,
-        UPPER_ARM_PICKUP_SPECIMEN = 80,
-        UPPER_ARM_DEPOSIT_SPECIMEN = 50,
+        UPPER_ARM_HORIZONTAL = 220,
+        UPPER_ARM_LOWERED = -290, // servo position [0, 1]
+        UPPER_ARM_RAISED = 840,
+        UPPER_ARM_REST = 0,
+        UPPER_ARM_TRANSFER = 0,
+        UPPER_ARM_PICKUP_SPECIMEN = -280,
+        UPPER_ARM_DEPOSIT_SPECIMEN = 272,
         UPPER_ARM_DEPOSIT_SAMPLE = 300;
 
     public final static double
-        UPPER_CLAW_CLOSED = 0.862,
-        UPPER_CLAW_OPEN = 0.735;
+        UPPER_CLAW_CLOSED = 0.666,
+        UPPER_CLAW_OPEN = 0.556;
 
     public final static double
         UPPER_CLAW_DOWN = 0,
         UPPER_CLAW_UP = 1,
-        UPPER_CLAW_PITCH_TRANSFER = 0.3228,
-        UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.282,
-        UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.282,
+        UPPER_CLAW_PITCH_TRANSFER = 0.999,
+        UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.32,
+        UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.58,
         UPPER_CLAW_PITCH_DEPOSIT_SAMPLE = 0.5428;
 
     public final static double
-        LOWER_SLIDES_RETRACTED = 0.1522,
-        LOWER_SLIDES_EXTENDED = 0.422,
+        LOWER_SLIDES_RETRACTED = 0.856,
+        LOWER_SLIDES_EXTENDED = 0.6,
+        LOWER_SLIDES_TRANSFER = 0.81,
         LOWER_SLIDES_RETRACT_DURATION = 0.7, // sec
         LOWER_SLIDES_EXTEND_DURATION = 0.3;
 
     public final static double
-        LOWER_CLAW_CLOSED = 0.83,
-        LOWER_CLAW_OPEN = 0.55;
+        LOWER_CLAW_CLOSED = 0.63,
+        LOWER_CLAW_OPEN = 0.34;
 
     public final static double
         LOWER_CLAW_YAW_HORIZONTAL = 0.0574, // to pick up vertical samples
@@ -113,12 +121,13 @@ public class JamalThree extends MecanumDrive {
         LOWER_CLAW_YAW_VERTICAL = 0.3786,
         LOWER_CLAW_YAW_135DEGREES = 0.5433,
         LOWER_CLAW_YAW_HORIZONTAL_FLIPPED = 0.708,
-        LOWER_CLAW_YAW_TRANSFER = LOWER_CLAW_YAW_HORIZONTAL_FLIPPED;
+        LOWER_CLAW_YAW_TRANSFER = LOWER_CLAW_YAW_HORIZONTAL;
 
     public final static double
-        LOWER_CLAW_DOWN = 0.415,
+        LOWER_CLAW_DOWN = 0.,
+        LOWER_CLAW_DOWNWARD = 0.415,
         LOWER_CLAW_UP = 1,
-        LOWER_CLAW_PITCH_TRANSFER = LOWER_CLAW_UP;
+        LOWER_CLAW_PITCH_TRANSFER = 0.016;
     //endregion
 
     public JamalThree(LinearOpMode opmode) {
@@ -165,6 +174,14 @@ public class JamalThree extends MecanumDrive {
         }
         upperSlideRight.setDirection(DcMotor.Direction.REVERSE);
 
+        upperArm.addControl(UPPER_ARM_LOWERED, UPPER_ARM_RAISED, voltageScaler, upperArmMaxPower,
+                upperArmPositionGain,
+                upperArmVelocityPIDFCOefficients.p,
+                upperArmVelocityPIDFCOefficients.i,
+                upperArmVelocityPIDFCOefficients.d,
+                upperArmVelocityPIDFCOefficients.f
+        );
+
         // TODO: internal servo scaling
 //        upperClaw.scaleRange(UPPER_CLAW_CLOSED, UPPER_CLAW_OPEN); //
         upperClawPitch.setDirection(Servo.Direction.REVERSE);
@@ -200,6 +217,7 @@ public class JamalThree extends MecanumDrive {
     public void update() {
         updatePose();
         updateUpperSlides();
+        updateUpperArm();
         updateTransferFSM();
         updatePrepareSpecimenPickupFSM();
         updatePrepareSamplePickupFSM();
@@ -265,6 +283,10 @@ public class JamalThree extends MecanumDrive {
 
         if (showTelemetry) {
             telemetry.addData("Upper Arm Positiion", upperArm.getLastPosition());
+            telemetry.addData("Upper Arm Velocity", upperArm.getLastVelocity());
+            telemetry.addData("Upper Arm ffpower", upperArm.ffpower);
+            telemetry.addData("Upper Arm fbpower", upperArm.fbpower);
+            telemetry.addData("Upper Arm target velo", upperArm.getTargetVelocityEx());
         }
     }
 
@@ -379,8 +401,8 @@ public class JamalThree extends MecanumDrive {
 
                 transferTimer.reset();
 
-                if (getLowerSlidesPos() != LOWER_SLIDES_RETRACTED) {
-                    retractLowerSlides();
+                if (getLowerSlidesPos() != LOWER_SLIDES_TRANSFER) {
+                    setLowerSlidesPos(LOWER_SLIDES_TRANSFER);
                     transferState = TransferState.RETRACTING_SLIDES;
                 } else {
                     transferState = TransferState.TRANSFERRING;
@@ -461,7 +483,7 @@ public class JamalThree extends MecanumDrive {
             case EXTENDING_SLIDES:
                 if (prepareSamplePickupTimer.time() > LOWER_SLIDES_EXTEND_DURATION) {
                     openLowerClaw();
-                    setLowerClawPitchPos( LOWER_CLAW_DOWN );
+                    setLowerClawPitchPos( LOWER_CLAW_DOWNWARD );
                     setLowerClawYawPos(LOWER_CLAW_YAW_HORIZONTAL);
                     prepareSamplePickupState = PrepareSamplePickupState.INACTIVE;
                 }

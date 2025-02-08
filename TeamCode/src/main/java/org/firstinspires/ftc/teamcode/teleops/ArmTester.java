@@ -20,14 +20,20 @@ public class ArmTester extends LinearOpMode {
         robot = new JamalThree(this);
 
         double motorPos = 0;
+        double feedf = 0;
 
         waitForStart();
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
             robot.update();
 
-            if      (gamepad2.right_trigger > 0) motorPos = Math.min(600, motorPos + 0.02);
-            else if (gamepad2.left_trigger  > 0) motorPos = Math.max(0, motorPos - 0.02);
+            if      (gamepad2.right_trigger > 0) motorPos = Math.min(6000, motorPos + 1);
+            else if (gamepad2.left_trigger  > 0) motorPos = Math.max(-600, motorPos - 1);
+
+            if      (gamepad2.right_bumper) feedf += 0.0001;
+            else if (gamepad2.left_bumper)  feedf -= 0.0001;
+
+//            robot.upperArm.addF(feedf);
 
             if (gamepad2.a) {
                 if (gamepad2.dpad_down) {
@@ -41,6 +47,7 @@ public class ArmTester extends LinearOpMode {
                 }
             }
 
+
             else if (gamepad2.b) {
                 if (gamepad2.dpad_up) {
                     robot.setUpperArmPos((int)motorPos);
@@ -52,7 +59,9 @@ public class ArmTester extends LinearOpMode {
 
             else if (gamepad2.y) {
                 if (gamepad2.dpad_up) {
+                    robot.setUpperArmVelocity(200);
                 } else if (gamepad2.dpad_down) {
+                    robot.setUpperArmVelocity(0);
                 } else if (gamepad2.dpad_right) {
                 }
             }
@@ -66,7 +75,8 @@ public class ArmTester extends LinearOpMode {
 
             moveDriveTrain(gamepad1);
 
-            telemetry.addData("slidePos", motorPos);
+            telemetry.addData("motorPos", motorPos);
+            telemetry.addData("feedf", feedf);
             telemetry.addData("Upper Arm Position", robot.getUpperArmPos());
 
             telemetry.addData("Max Drive Power", robot.maxDrivePower);

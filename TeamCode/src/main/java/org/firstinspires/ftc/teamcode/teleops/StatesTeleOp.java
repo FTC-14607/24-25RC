@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.robots.JamalThree;
 import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 
 @Config
@@ -13,17 +14,17 @@ import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 public class StatesTeleOp extends LinearOpMode {
 
     public static double UPPER_SLIDE_MAX_SPEED = 0.9; // power
-    public static double UPPER_ARM_MAX_SPEED = 0.3; // servo position / sec
+    public static double UPPER_ARM_MAX_SPEED = 400; // servo position / sec
     public static double UPPER_CLAW_PITCH_MAX_SPEED = 0.4;
     public static double LOWER_SLIDE_MAX_SPEED = 0.6; // servo position / sec
 
-    JamalTwo robot;
+    JamalThree robot;
     boolean showTelemetry = true;
     ElapsedTime loopTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() {
-        robot = new JamalTwo(this);
+        robot = new JamalThree(this);
         robot.maxDrivePower = 0.9;
 
         initPositions();
@@ -91,7 +92,7 @@ public class StatesTeleOp extends LinearOpMode {
     public void initPositions() {
         robot.upperSlideRight.brake();
         robot.upperSlideLeft.brake();
-        robot.setUpperArmPos(JamalTwo.UPPER_ARM_REST);
+        robot.setUpperArmPos(JamalThree.UPPER_ARM_REST);
     }
 
     boolean holdingUpperSlides = false;
@@ -119,10 +120,8 @@ public class StatesTeleOp extends LinearOpMode {
         double input = gamepad.right_trigger - gamepad.left_trigger;
 
         if (input != 0) {
-            double deltaTime = loopTimer.time();
-
-            double nextArmPos = robot.getUpperArmPos() + input * deltaTime * UPPER_ARM_MAX_SPEED;
-            robot.setUpperArmPos(nextArmPos);
+            double armVelo = input * UPPER_ARM_MAX_SPEED;
+            robot.setUpperArmVelocity(armVelo);
         }
     }
 

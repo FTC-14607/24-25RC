@@ -1,14 +1,8 @@
 package org.firstinspires.ftc.teamcode.util.hardware;
 
-import android.sax.StartElementListener;
-
-import androidx.annotation.NonNull;
-
 import com.arcrobotics.ftclib.controller.PIDController;
-import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -26,7 +20,7 @@ public class PIDFMotor extends DcMotorImplEx {
     protected PIDController velocityFeedbackController; // input: ticks/sec output: motor power
     protected double velocityFeedforwardGain;           // input: ticks     output: motor power
 
-    protected SlideState state = SlideState.INACTIVE;
+    protected State state = State.INACTIVE;
     protected double ticksPerInch;                      // input: inches    output: ticks
     protected double voltageScaler = 1.0;
     public double maxPower = 1.0;
@@ -34,7 +28,7 @@ public class PIDFMotor extends DcMotorImplEx {
     public int bottomPosition; // ticks
     public int topPosition;
 
-    public enum SlideState {
+    public enum State {
         INACTIVE,
         BRAKE,
         RUN_TO_POSITION,
@@ -138,11 +132,11 @@ public class PIDFMotor extends DcMotorImplEx {
     }
 
     public void pauseControl() {
-        state = SlideState.INACTIVE;
+        state = State.INACTIVE;
     }
 
     public void brake() {
-        state = SlideState.BRAKE;
+        state = State.BRAKE;
     }
 
     public void setPowerEx(double power) {
@@ -160,7 +154,7 @@ public class PIDFMotor extends DcMotorImplEx {
     public void setTargetPositionEx(int targetPosition) {
         targetPosition = Range.clip(targetPosition, bottomPosition, topPosition);
         positionController.setSetPoint(targetPosition);
-        state = SlideState.RUN_TO_POSITION;
+        state = State.RUN_TO_POSITION;
     }
 
     public void setTargetPositionInches(double targetPositionInches) {
@@ -169,7 +163,7 @@ public class PIDFMotor extends DcMotorImplEx {
 
     public void setTargetVelocityEx(double targetVelocity) {
         velocityFeedbackController.setSetPoint(targetVelocity);
-        state = SlideState.RUN_AT_VELOCITY;
+        state = State.RUN_AT_VELOCITY;
     }
 
 }

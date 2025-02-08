@@ -34,8 +34,9 @@ public class ArmMotor extends PIDFMotor {
         position -= horizontalPosition;
         double rotations = position / ticksPerRotation;
         double angle = 2 * Math.PI * rotations;
+        boolean goingUp = rotations < 0.25; // if increasing tick values means raising the arm
 
-        return velocityFeedforwardGain * -Math.cos(angle);
+        return velocityFeedforwardGain * Math.cos(angle);
     }
 
 }
