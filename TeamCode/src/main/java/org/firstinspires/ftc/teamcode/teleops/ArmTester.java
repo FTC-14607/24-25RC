@@ -33,7 +33,7 @@ public class ArmTester extends LinearOpMode {
             if      (gamepad2.right_bumper) feedf += 0.0001;
             else if (gamepad2.left_bumper)  feedf -= 0.0001;
 
-//            robot.upperArm.addF(feedf);
+            robot.upperArm.addF(feedf);
 
             if (gamepad2.a) {
                 if (gamepad2.dpad_down) {

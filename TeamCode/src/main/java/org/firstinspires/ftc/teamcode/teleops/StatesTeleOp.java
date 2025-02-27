@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 public class StatesTeleOp extends LinearOpMode {
 
     public static double UPPER_SLIDE_MAX_SPEED = 0.9; // power
-    public static double UPPER_ARM_MAX_SPEED = 400; // servo position / sec
+    public static double UPPER_ARM_MAX_SPEED = 400; // ticks / sec
     public static double UPPER_CLAW_PITCH_MAX_SPEED = 0.4;
     public static double LOWER_SLIDE_MAX_SPEED = 0.6; // servo position / sec
 
@@ -92,7 +92,7 @@ public class StatesTeleOp extends LinearOpMode {
     public void initPositions() {
         robot.upperSlideRight.brake();
         robot.upperSlideLeft.brake();
-        robot.setUpperArmPos(JamalThree.UPPER_ARM_REST);
+//        robot.setUpperArmPos(JamalThree.UPPER_ARM_REST);
     }
 
     boolean holdingUpperSlides = false;
@@ -119,10 +119,11 @@ public class StatesTeleOp extends LinearOpMode {
     public void controlUpperArm(Gamepad gamepad) {
         double input = gamepad.right_trigger - gamepad.left_trigger;
 
-        if (input != 0) {
-            double armVelo = input * UPPER_ARM_MAX_SPEED;
-            robot.setUpperArmVelocity(armVelo);
-        }
+        if (input == 0 && !robot.allMacrosInactive())
+            return;
+
+        double armVelo = input * UPPER_ARM_MAX_SPEED;
+        robot.setUpperArmVelocity(armVelo);
     }
 
     boolean upperClawFirstInput = true;

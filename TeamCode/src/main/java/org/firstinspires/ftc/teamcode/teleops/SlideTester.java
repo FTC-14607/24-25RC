@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.robots.JamalThree;
 import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 import org.firstinspires.ftc.teamcode.util.hardware.LinearSlideMotor;
 
@@ -15,11 +16,11 @@ import org.firstinspires.ftc.teamcode.util.hardware.LinearSlideMotor;
 @TeleOp(name = "Slide Tester", group = "Test")
 public class SlideTester extends LinearOpMode {
 
-    JamalTwo robot;
+    JamalThree robot;
     ElapsedTime loopTimer = new ElapsedTime();
 
     public void runOpMode() {
-        robot = new JamalTwo(this);
+        robot = new JamalThree(this);
 
         double slidePos = 0;
         double slideVelo = 0;
