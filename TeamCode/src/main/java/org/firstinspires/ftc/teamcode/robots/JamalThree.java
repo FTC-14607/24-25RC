@@ -46,13 +46,17 @@ public class JamalThree extends MecanumDrive {
     // The slide PID is tuned so that the velocity almost always lags behind the target velocity, because oscillations
     // are very bad
     public static PIDFCoefficients upperSlidesVelocityPIDFCoefficients =
-            new PIDFCoefficients(0.00035,0.0,0.0,0.00005);
+            new PIDFCoefficients(0.00035,0.01,0.0,0.00005);
     public static double upperSlidesPositionGain = 3.6;
 
-    public static double upperArmMaxPower = 0.6;
+    public static double upperArmMaxPower = 0.5;
+//    public static PIDFCoefficients upperArmVelocityPIDFCOefficients =
+//            new PIDFCoefficients(0.0006, 0.001, 0, 0.142);
+//    public static double upperArmPositionGain = 5.7;
+
     public static PIDFCoefficients upperArmVelocityPIDFCOefficients =
-            new PIDFCoefficients(0.0006, 0.000, 0, 0.142);
-    public static double upperArmPositionGain = 5.7;
+            new PIDFCoefficients(0.0003, 0.055, 0.000, 0.142);
+    public static double upperArmPositionGain = 6;
 
     public Servo[] lowerSlides;
 
@@ -76,43 +80,43 @@ public class JamalThree extends MecanumDrive {
         UPPER_SLIDES_TRANSFER = 0,
         UPPER_SLIDES_MIN_ARM_CLEARANCE = 940, // minimum height at which the upper arm can go fully down
         UPPER_SLIDES_PICKUP_SPECIMEN = 1150,
-        UPPER_SLIDES_DEPOSIT_SPECIMEN = 1080,
+        UPPER_SLIDES_DEPOSIT_SPECIMEN = 1530,
         UPPER_SLIDES_DEPOSIT_SAMPLE = 2950;
     public static double UPPER_SLIDES_DEFAULT_SPEED = 100;
     public static double UPPER_SLIDES_INCHES_TO_TICKS = -1;
 
     public static double UPPER_ARM_TICKS_PER_ROTATION = 1425.059231 * 24/16; // 16:24 gear ratio
     public static int
-        UPPER_ARM_HORIZONTAL = 320,
-        UPPER_ARM_LOWERED = -290, // servo position [0, 1]
-        UPPER_ARM_RAISED = 1200,
+        UPPER_ARM_HORIZONTAL = 300,
+        UPPER_ARM_LOWERED = -300, // servo position [0, 1]
+        UPPER_ARM_RAISED = 1500,
         UPPER_ARM_REST = 0, // should always be zero. if belt slips, reset in rest position
         UPPER_ARM_TRANSFER = 200,
-        UPPER_ARM_PICKUP_SPECIMEN = -280,
-        UPPER_ARM_DEPOSIT_SPECIMEN = 272,
+        UPPER_ARM_PICKUP_SPECIMEN = -300,
+        UPPER_ARM_DEPOSIT_SPECIMEN = 1355,
         UPPER_ARM_DEPOSIT_SAMPLE = 300;
 
     public final static double
-        UPPER_CLAW_CLOSED = 0.698,
-        UPPER_CLAW_OPEN = 0.583;
+        UPPER_CLAW_CLOSED = 0.73,
+        UPPER_CLAW_OPEN = 0.6;
 
     public final static double
         UPPER_CLAW_DOWN = 0,
         UPPER_CLAW_UP = 1,
         UPPER_CLAW_PITCH_TRANSFER = 0.98,
-        UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.32,
-        UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.58,
+        UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.935,
+        UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.882,
         UPPER_CLAW_PITCH_DEPOSIT_SAMPLE = 0.5428;
 
     public final static double
         LOWER_SLIDES_RETRACTED = 0.856,
         LOWER_SLIDES_EXTENDED = 0.6,
         LOWER_SLIDES_TRANSFER = LOWER_SLIDES_RETRACTED,
-        LOWER_SLIDES_RETRACT_DURATION = 1.0, // sec
+        LOWER_SLIDES_RETRACT_DURATION = 0.8, // sec
         LOWER_SLIDES_EXTEND_DURATION = 0.3;
 
     public final static double
-        LOWER_CLAW_CLOSED = 0.63,
+        LOWER_CLAW_CLOSED = 0.66,
         LOWER_CLAW_OPEN = 0.34;
 
     public final static double
@@ -127,7 +131,8 @@ public class JamalThree extends MecanumDrive {
         LOWER_CLAW_DOWN = 0.,
         LOWER_CLAW_DOWNWARD = 0.04,
         LOWER_CLAW_UP = 1,
-        LOWER_CLAW_PITCH_TRANSFER = 0.72;
+        LOWER_CLAW_UPWARD = 0.7,
+        LOWER_CLAW_PITCH_TRANSFER = 0.75;
     //endregion
 
     public JamalThree(LinearOpMode opmode) {
@@ -351,8 +356,8 @@ public class JamalThree extends MecanumDrive {
     //endregion
 
     //region Lower Claw Pitch
-    public void lowerLowerClaw() { setLowerClawPitchPos(LOWER_CLAW_DOWN); }
-    public void raiseLowerClaw() { setLowerClawPitchPos(LOWER_CLAW_UP); }
+    public void lowerLowerClaw() { setLowerClawPitchPos(LOWER_CLAW_DOWNWARD); }
+    public void raiseLowerClaw() { setLowerClawPitchPos(LOWER_CLAW_UPWARD); }
 
     public double getLowerClawPitchPos() { return lowerClawPitch.getPosition(); }
     public void setLowerClawPitchPos(double pos) { lowerClawPitch.setPosition(clip(pos, LOWER_CLAW_DOWN, LOWER_CLAW_UP)); }
@@ -384,7 +389,7 @@ public class JamalThree extends MecanumDrive {
     private enum TransferState { INACTIVE,  START, RAISING_ARM, RETRACTING_SLIDES, TRANSFERRING }
     private TransferState transferState = TransferState.INACTIVE;
     private final ElapsedTime transferTimer = new ElapsedTime();
-    public static double RAISE_UPPER_ARM_TRANSFER_DURATION = 1.0;
+    public static double RAISE_LOWER_CLAW_DURATION = 0.5;
 
     private void updateTransferFSM() {
         switch (transferState) {
@@ -399,7 +404,7 @@ public class JamalThree extends MecanumDrive {
                 transferTimer.reset();
                 transferState = TransferState.RAISING_ARM;
             case RAISING_ARM:
-                if (transferTimer.time() < RAISE_UPPER_ARM_TRANSFER_DURATION)
+                if (transferTimer.time() < RAISE_LOWER_CLAW_DURATION || !isClose(getUpperArmPos(), UPPER_ARM_TRANSFER, 8))
                     break;
 
                 setUpperSlidesPos( UPPER_SLIDES_TRANSFER );
@@ -415,7 +420,7 @@ public class JamalThree extends MecanumDrive {
                 }
                 break;
             case RETRACTING_SLIDES:
-                if (transferTimer.time() < LOWER_SLIDES_RETRACT_DURATION)
+                if (transferTimer.time() < LOWER_SLIDES_RETRACT_DURATION || !isClose(getUpperSlidesPos(), UPPER_SLIDES_TRANSFER, 30))
                     break;
 
                 transferTimer.reset();
@@ -460,7 +465,7 @@ public class JamalThree extends MecanumDrive {
                 }
                 break;
             case LOWERING_ARM:
-                if (getUpperArmPos() <= UPPER_ARM_PICKUP_SPECIMEN * 0.9) {
+                if (isClose(getUpperArmPos(), UPPER_ARM_PICKUP_SPECIMEN, 10) && isClose(getUpperSlidesPos(), UPPER_SLIDES_PICKUP_SPECIMEN, 80)) {
                     prepareSpecimenPickupState = PrepareSpecimenPickupState.INACTIVE;
                 }
                 break;
@@ -544,8 +549,8 @@ public class JamalThree extends MecanumDrive {
     //endregion
 
     public void prepareSpecimenDeposit() {
-        if (!allMacrosInactive())
-            return;
+//        if (!allMacrosInactive())
+//            return;
         setUpperSlidesPos(UPPER_SLIDES_DEPOSIT_SPECIMEN);
         setUpperArmPos( UPPER_ARM_DEPOSIT_SPECIMEN );
         setUpperClawPitchPos( UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN );

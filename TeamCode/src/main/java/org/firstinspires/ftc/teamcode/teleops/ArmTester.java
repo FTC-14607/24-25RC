@@ -33,11 +33,12 @@ public class ArmTester extends LinearOpMode {
             if      (gamepad2.right_bumper) feedf += 0.0001;
             else if (gamepad2.left_bumper)  feedf -= 0.0001;
 
-            robot.upperArm.addF(feedf);
+//            robot.upperArm.addF(feedf);
 
             if (gamepad2.a) {
                 if (gamepad2.dpad_down) {
                     robot.upperArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    robot.upperArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 } else if (gamepad2.right_trigger > 0) {
                     robot.upperArm.setPowerEx(0.3);
                 } else if (gamepad2.left_trigger > 0) {

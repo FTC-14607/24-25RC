@@ -20,6 +20,7 @@ public class ArmMotor extends PIDFMotor {
         super(motor);
         this.ticksPerRotation = ticksPerRotation;
         this.horizontalPosition = horizontalPosition;
+        setZeroPowerBehavior(ZeroPowerBehavior.BRAKE);
     }
 
     /**

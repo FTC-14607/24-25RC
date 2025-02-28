@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.robots.JamalTwo;
 public class StatesTeleOp extends LinearOpMode {
 
     public static double UPPER_SLIDE_MAX_SPEED = 0.9; // power
-    public static double UPPER_ARM_MAX_SPEED = 400; // ticks / sec
+    public static double UPPER_ARM_MAX_SPEED = 800; // ticks / sec
     public static double UPPER_CLAW_PITCH_MAX_SPEED = 0.4;
     public static double LOWER_SLIDE_MAX_SPEED = 0.6; // servo position / sec
 
