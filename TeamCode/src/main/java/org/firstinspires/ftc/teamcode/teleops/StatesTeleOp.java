@@ -8,19 +8,22 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robots.JamalThree;
 import org.firstinspires.ftc.teamcode.robots.JamalTwo;
-
+//gamepad1.b make it
 @Config
 @TeleOp(name = "JamalThree Main TeleOp", group = "Main")
 public class StatesTeleOp extends LinearOpMode {
 
     public static double UPPER_SLIDE_MAX_SPEED = 0.9; // power
     public static double UPPER_ARM_MAX_SPEED = 800; // ticks / sec
-    public static double UPPER_CLAW_PITCH_MAX_SPEED = 0.4;
+    public static double UPPER_CLAW_PITCH_MAX_SPEED = 0.6; //updated from 0.4 will change to driver's preference
     public static double LOWER_SLIDE_MAX_SPEED = 0.6; // servo position / sec
+    public static double LOWER_CLAW_PITCH_MAX_SPEED = 0.8;
+    public static double LOWER_CLAW_YAW_MAX_SPEED = 0.4;
 
     JamalThree robot;
     boolean showTelemetry = true;
     ElapsedTime loopTimer = new ElapsedTime();
+
 
     @Override
     public void runOpMode() {
@@ -37,6 +40,8 @@ public class StatesTeleOp extends LinearOpMode {
             // TODO: instead of passing a gamepad, make variables like upperClawInput and read
 
             // semi-automated control
+
+
             if (gamepad1.start || gamepad2.start) {
                 robot.cancelAllMacros();
             }
@@ -46,6 +51,7 @@ public class StatesTeleOp extends LinearOpMode {
             else if (gamepad1.x) {
                 robot.startPrepareSamplePickup();
             }
+            //b on
             else if (gamepad2.b && gamepad2.left_stick_button) {
                 holdingUpperSlides = false;
                 robot.startPrepareSpecimenPickup();
@@ -61,11 +67,14 @@ public class StatesTeleOp extends LinearOpMode {
 
             // manual control of each individual part
             controlDriveTrain(gamepad1);
+            controlMaxSpeedDriveTrain(gamepad2); //changed this to help the dpad of gamepad1 control pitch and yaw more fine
 
             if (robot.allMacrosInactive()) {
                 controlLowerSlides(gamepad1);
                 controlLowerClaw(gamepad1);
                 controlLowerClawPitch(gamepad1);
+                controlLowerClawPitchFine(gamepad1);
+                controlLowerClawYawFine(gamepad1);
                 controlLowerClawYaw(gamepad1);
 
                 controlUpperSlides(gamepad2);
@@ -92,6 +101,7 @@ public class StatesTeleOp extends LinearOpMode {
     public void initPositions() {
         robot.upperSlideRight.brake();
         robot.upperSlideLeft.brake();
+        robot.closeUpperClaw();
 //        robot.setUpperArmPos(JamalThree.UPPER_ARM_REST);
     }
 
@@ -143,6 +153,7 @@ public class StatesTeleOp extends LinearOpMode {
         }
     }
 
+
     public void controlUpperClawPitch(Gamepad gamepad) {
         double input = gamepad.right_stick_y;
 
@@ -153,6 +164,7 @@ public class StatesTeleOp extends LinearOpMode {
             robot.setUpperClawPitchPos(nextPitchPos);
         }
     }
+
 
     public void controlLowerSlides(Gamepad gamepad) {
         double input = gamepad.right_trigger - gamepad.left_trigger;
@@ -199,6 +211,25 @@ public class StatesTeleOp extends LinearOpMode {
         }
 
     }
+    public void controlLowerClawPitchFine(Gamepad gamepad) //added so anush can control the pitch fine
+    {
+        boolean inputOne = gamepad.dpad_down;
+        boolean inputTwo = gamepad.dpad_up;
+        if(inputOne)
+        {
+            double deltaTime = loopTimer.time();
+            double nextPitchPos = robot.getLowerClawPitchPos() + deltaTime * LOWER_CLAW_PITCH_MAX_SPEED * -1;
+            robot.setLowerClawPitchPos(nextPitchPos);
+
+        }
+        else if(inputTwo)
+        {
+            double deltaTime = loopTimer.time();
+            double nextPitchPos = robot.getLowerClawPitchPos() + deltaTime * LOWER_CLAW_PITCH_MAX_SPEED;
+            robot.setLowerClawPitchPos(nextPitchPos);
+        }
+
+    }
 
     boolean lowerClawYawFirstInput = true;
     int lowerClawYawPos = 0;
@@ -226,20 +257,35 @@ public class StatesTeleOp extends LinearOpMode {
         }
 
     }
+    public void controlLowerClawYawFine(Gamepad gamepad) //added so anush can control the yaw fine
+    {
+        boolean inputOne = gamepad.dpad_left;
+        boolean inputTwo = gamepad.dpad_right;
+
+        if(inputOne)
+        {
+            double deltaTime = loopTimer.time();
+            double nextPitchPos = robot.getLowerClawYawPos() + deltaTime * LOWER_CLAW_YAW_MAX_SPEED * 1;
+            robot.setLowerClawYawPos(nextPitchPos);
+
+        }
+        else if(inputTwo)
+        {
+            double deltaTime = loopTimer.time();
+            double nextPitchPos = robot.getLowerClawYawPos() + deltaTime * LOWER_CLAW_YAW_MAX_SPEED * -1;
+            robot.setLowerClawYawPos(nextPitchPos);
+        }
+    }
 
     public void controlDriveTrain(Gamepad gamepad) {
 
         // TODO: field centric
 
-        // change max drive power
-        if      (gamepad.dpad_down) robot.maxDrivePower = 0.3;
-        else if (gamepad.dpad_left) robot.maxDrivePower = 0.5;
-        else if (gamepad.dpad_up) robot.maxDrivePower = 0.7;
-        else if (gamepad.dpad_right) robot.maxDrivePower = 0.9;
+
 
         // set drivetrain power (flipped cuz i thoguht thw wrong side was forward 3050 2075
-        double throttle = gamepad.left_stick_y * -1;
-        double strafe   = -gamepad.left_stick_x * -1;
+        double throttle = gamepad.left_stick_y * 1;
+        double strafe   = -gamepad.left_stick_x * 1; //positioning change for drivers
         double rotate   = gamepad.right_stick_x;
 
 //        // dpad for easy orthogonal movement
@@ -251,5 +297,13 @@ public class StatesTeleOp extends LinearOpMode {
         // TODO: setup rotation corrections
 
         robot.drive(throttle, strafe, rotate);
+    }
+    public void controlMaxSpeedDriveTrain(Gamepad gamepad)
+    {
+        // change max drive power
+        if      (gamepad.dpad_down) robot.maxDrivePower = 0.3;
+        else if (gamepad.dpad_left) robot.maxDrivePower = 0.5;
+        else if (gamepad.dpad_up) robot.maxDrivePower = 0.7;
+        else if (gamepad.dpad_right) robot.maxDrivePower = 0.9;
     }
 }

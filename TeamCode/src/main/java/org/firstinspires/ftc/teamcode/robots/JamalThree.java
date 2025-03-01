@@ -91,28 +91,30 @@ public class JamalThree extends MecanumDrive {
         UPPER_ARM_LOWERED = -300, // servo position [0, 1]
         UPPER_ARM_RAISED = 1500,
         UPPER_ARM_REST = 0, // should always be zero. if belt slips, reset in rest position
-        UPPER_ARM_TRANSFER = 200,
+        UPPER_ARM_TRANSFER = 41,
         UPPER_ARM_PICKUP_SPECIMEN = -300,
         UPPER_ARM_DEPOSIT_SPECIMEN = 1355,
         UPPER_ARM_DEPOSIT_SAMPLE = 300;
 
     public final static double
-        UPPER_CLAW_CLOSED = 0.73,
-        UPPER_CLAW_OPEN = 0.6;
+        UPPER_CLAW_CLOSED = 0.75, //these are the new values that seem to work
+        UPPER_CLAW_OPEN = 0.48;
 
     public final static double
         UPPER_CLAW_DOWN = 0,
         UPPER_CLAW_UP = 1,
-        UPPER_CLAW_PITCH_TRANSFER = 0.98,
+        UPPER_CLAW_PITCH_TRANSFER = 0.48, //updated from previous 0.3
         UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.935,
         UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.882,
         UPPER_CLAW_PITCH_DEPOSIT_SAMPLE = 0.5428;
 
     public final static double
-        LOWER_SLIDES_RETRACTED = 0.856,
+        LOWER_SLIDES_RETRACTED = 0.8117, //changed from 0.856
+        LOWER_SLIDES_RETRACTED_MAX = 0.9351, // akul wanted the lower slides to retract all the way(only for manual controls)
         LOWER_SLIDES_EXTENDED = 0.6,
+
         LOWER_SLIDES_TRANSFER = LOWER_SLIDES_RETRACTED,
-        LOWER_SLIDES_RETRACT_DURATION = 0.8, // sec
+        LOWER_SLIDES_RETRACT_DURATION = 0.83, // sec
         LOWER_SLIDES_EXTEND_DURATION = 0.3;
 
     public final static double
@@ -131,8 +133,8 @@ public class JamalThree extends MecanumDrive {
         LOWER_CLAW_DOWN = 0.,
         LOWER_CLAW_DOWNWARD = 0.04,
         LOWER_CLAW_UP = 1,
-        LOWER_CLAW_UPWARD = 0.7,
-        LOWER_CLAW_PITCH_TRANSFER = 0.75;
+        LOWER_CLAW_UPWARD = 1,
+        LOWER_CLAW_PITCH_TRANSFER = 1; //changed from 0.7
     //endregion
 
     public JamalThree(LinearOpMode opmode) {
@@ -340,7 +342,7 @@ public class JamalThree extends MecanumDrive {
         return lowerSlideLeft.getPosition();
     }
     public void setLowerSlidesPos(double pos) {
-        pos = clip(pos, LOWER_SLIDES_EXTENDED, LOWER_SLIDES_RETRACTED);
+        pos = clip(pos, LOWER_SLIDES_EXTENDED, LOWER_SLIDES_RETRACTED_MAX);
         for (Servo slide : lowerSlides)
             slide.setPosition(pos);
         // TODO: add camera for auto pickup
@@ -391,25 +393,33 @@ public class JamalThree extends MecanumDrive {
     private final ElapsedTime transferTimer = new ElapsedTime();
     public static double RAISE_LOWER_CLAW_DURATION = 0.5;
 
+    private boolean isClose(double a, double b, double tolerance) {
+        return Math.abs(a - b) < tolerance;
+    }
     private void updateTransferFSM() {
         switch (transferState) {
             case INACTIVE:
                 break;
             case START:
-                openUpperClaw();
-                setUpperArmPos( UPPER_ARM_TRANSFER );
-                setLowerClawPitchPos( LOWER_CLAW_PITCH_TRANSFER );
-                setLowerClawYawPos(   LOWER_CLAW_YAW_TRANSFER   );
 
+                openUpperClaw();
+                setUpperArmPos(UPPER_ARM_TRANSFER);
+                setLowerClawPitchPos(LOWER_CLAW_PITCH_TRANSFER);
+                setLowerClawYawPos(LOWER_CLAW_YAW_TRANSFER);
                 transferTimer.reset();
                 transferState = TransferState.RAISING_ARM;
+
+                telemetry.update();
+                break;
             case RAISING_ARM:
-                if (transferTimer.time() < RAISE_LOWER_CLAW_DURATION || !isClose(getUpperArmPos(), UPPER_ARM_TRANSFER, 8))
+               //!isClose(getUpperArmPos(), UPPER_ARM_TRANSFER, 8) -- took this out to work
+                if (transferTimer.time() < RAISE_LOWER_CLAW_DURATION) {
+
                     break;
+                }
 
-                setUpperSlidesPos( UPPER_SLIDES_TRANSFER );
-                setUpperClawPitchPos( UPPER_CLAW_PITCH_TRANSFER );
-
+                setUpperSlidesPos(UPPER_SLIDES_TRANSFER);
+                setUpperClawPitchPos(UPPER_CLAW_PITCH_TRANSFER);
                 transferTimer.reset();
 
                 if (getLowerSlidesPos() != LOWER_SLIDES_TRANSFER) {
@@ -418,21 +428,30 @@ public class JamalThree extends MecanumDrive {
                 } else {
                     transferState = TransferState.TRANSFERRING;
                 }
+                telemetry.update();
                 break;
             case RETRACTING_SLIDES:
-                if (transferTimer.time() < LOWER_SLIDES_RETRACT_DURATION || !isClose(getUpperSlidesPos(), UPPER_SLIDES_TRANSFER, 30))
+                if (transferTimer.time() < LOWER_SLIDES_RETRACT_DURATION ||
+                        !isClose(getLowerSlidesPos(), LOWER_SLIDES_TRANSFER, 30.0)) {
                     break;
-
+                }
                 transferTimer.reset();
                 transferState = TransferState.TRANSFERRING;
                 break;
             case TRANSFERRING:
                 closeUpperClaw();
+
+
+                if (transferTimer.seconds() < .15) {
+                    break; // Stay in TRANSFERRING till time passed(changed because there was no delay before)
+                }
                 openLowerClaw();
                 transferState = TransferState.INACTIVE;
                 break;
+
         }
     }
+
 
     public void startTransfer() {
         if (allMacrosInactive())
@@ -472,6 +491,7 @@ public class JamalThree extends MecanumDrive {
         }
     }
 
+
     public void startPrepareSpecimenPickup() {
         if (allMacrosInactive())
             prepareSpecimenPickupState = PrepareSpecimenPickupState.START;
@@ -487,6 +507,9 @@ public class JamalThree extends MecanumDrive {
     private PrepareSamplePickupState prepareSamplePickupState = PrepareSamplePickupState.INACTIVE;
     private final ElapsedTime prepareSamplePickupTimer = new ElapsedTime();
 
+
+
+
     private void updatePrepareSamplePickupFSM() {
         switch (prepareSamplePickupState) {
             case INACTIVE:
@@ -499,11 +522,13 @@ public class JamalThree extends MecanumDrive {
             case EXTENDING_SLIDES:
                 if (prepareSamplePickupTimer.time() > LOWER_SLIDES_EXTEND_DURATION) {
                     openLowerClaw();
-                    setLowerClawPitchPos( LOWER_CLAW_DOWNWARD );
+                    setLowerClawPitchPos(LOWER_CLAW_DOWNWARD);
                     setLowerClawYawPos(LOWER_CLAW_YAW_HORIZONTAL);
                     prepareSamplePickupState = PrepareSamplePickupState.INACTIVE;
                 }
                 break;
+
+
         }
     }
 
