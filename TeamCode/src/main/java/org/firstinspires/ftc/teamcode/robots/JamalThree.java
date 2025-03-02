@@ -88,8 +88,8 @@ public class JamalThree extends MecanumDrive {
     public static double UPPER_ARM_TICKS_PER_ROTATION = 1425.059231 * 24/16; // 16:24 gear ratio
     public static int
         UPPER_ARM_HORIZONTAL = 300,
-        UPPER_ARM_LOWERED = -300, // servo position [0, 1]
-        UPPER_ARM_RAISED = 1500,
+        UPPER_ARM_LOWERED = -305, // servo position [0, 1]
+        UPPER_ARM_RAISED = 1450,
         UPPER_ARM_REST = 0, // should always be zero. if belt slips, reset in rest position
         UPPER_ARM_TRANSFER = 41,
         UPPER_ARM_PICKUP_SPECIMEN = -300,
@@ -97,20 +97,20 @@ public class JamalThree extends MecanumDrive {
         UPPER_ARM_DEPOSIT_SAMPLE = 300;
 
     public final static double
-        UPPER_CLAW_CLOSED = 0.72, //these are the new values that seem to work
-        UPPER_CLAW_OPEN = 0.48;
+        UPPER_CLAW_CLOSED = 0.735, //these are the new values that seem to work
+        UPPER_CLAW_OPEN = 0.61;
 
     public final static double
         UPPER_CLAW_DOWN = 0,
         UPPER_CLAW_UP = 1,
-        UPPER_CLAW_PITCH_TRANSFER = 0.48, //updated from previous 0.3
-        UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.935,
+        UPPER_CLAW_PITCH_TRANSFER = 0.6, //updated from previous 0.3
+        UPPER_CLAW_PITCH_PICKUP_SPECIMEN = 0.,
         UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN = 0.882,
         UPPER_CLAW_PITCH_DEPOSIT_SAMPLE = 0.5428;
 
     public final static double
         LOWER_SLIDES_RETRACTED = 0.8117, //changed from 0.856
-        LOWER_SLIDES_RETRACTED_MAX = 0.9351, // akul wanted the lower slides to retract all the way(only for manual controls)
+        LOWER_SLIDES_RETRACTED_MAX = 0.92, // akul wanted the lower slides to retract all the way(only for manual controls)
         LOWER_SLIDES_EXTENDED = 0.6,
 
         LOWER_SLIDES_TRANSFER = LOWER_SLIDES_RETRACTED,
@@ -230,6 +230,7 @@ public class JamalThree extends MecanumDrive {
         updatePrepareSpecimenPickupFSM();
         updatePrepareSamplePickupFSM();
         updatePrepareSampleDepositFSM();
+        updatePrepareSpecimenDepositFSM();
     }
 
     public void resetPose() {
@@ -377,7 +378,8 @@ public class JamalThree extends MecanumDrive {
                 transferState == TransferState.INACTIVE &&
                 prepareSpecimenPickupState == PrepareSpecimenPickupState.INACTIVE &&
                 prepareSampleDepositState == PrepareSampleDepositState.INACTIVE &&
-                prepareSamplePickupState == PrepareSamplePickupState.INACTIVE;
+                prepareSamplePickupState == PrepareSamplePickupState.INACTIVE &&
+                prepareSpecimenDepositeState == PrepareSpecimenDepositeState.INACTIVE;
     }
 
     public void cancelAllMacros() {
@@ -385,17 +387,16 @@ public class JamalThree extends MecanumDrive {
         cancelPrepareSpecimenPickup();
         cancelPrepareSamplePickup();
         cancelPrepareSampleDeposit();
+        cancelPrepareSpecimenDeposit();
     }
 
-    //region Transfer sample between claws
+    //region Transfer Sample Between Claws
     private enum TransferState { INACTIVE,  START, RAISING_ARM, RETRACTING_SLIDES, TRANSFERRING }
     private TransferState transferState = TransferState.INACTIVE;
     private final ElapsedTime transferTimer = new ElapsedTime();
     public static double RAISE_LOWER_CLAW_DURATION = 0.5;
+    public static double TRANSFER_DURATION = 0.15;
 
-    private boolean isClose(double a, double b, double tolerance) {
-        return Math.abs(a - b) < tolerance;
-    }
     private void updateTransferFSM() {
         switch (transferState) {
             case INACTIVE:
@@ -413,7 +414,6 @@ public class JamalThree extends MecanumDrive {
             case RAISING_ARM:
                //!isClose(getUpperArmPos(), UPPER_ARM_TRANSFER, 8) -- took this out to work
                 if (transferTimer.time() < RAISE_LOWER_CLAW_DURATION) {
-
                     break;
                 }
 
@@ -445,8 +445,7 @@ public class JamalThree extends MecanumDrive {
             case TRANSFERRING:
                 closeUpperClaw();
 
-
-                if (transferTimer.seconds() < .15) {
+                if (transferTimer.seconds() < TRANSFER_DURATION) {
                     break; // Stay in TRANSFERRING till time passed(changed because there was no delay before)
                 }
                 openLowerClaw();
@@ -511,9 +510,6 @@ public class JamalThree extends MecanumDrive {
     private PrepareSamplePickupState prepareSamplePickupState = PrepareSamplePickupState.INACTIVE;
     private final ElapsedTime prepareSamplePickupTimer = new ElapsedTime();
 
-
-
-
     private void updatePrepareSamplePickupFSM() {
         switch (prepareSamplePickupState) {
             case INACTIVE:
@@ -550,7 +546,7 @@ public class JamalThree extends MecanumDrive {
     private enum PrepareSampleDepositState { INACTIVE, START, RAISING_SLIDES }
     private PrepareSampleDepositState prepareSampleDepositState = PrepareSampleDepositState.INACTIVE;
 
-    public void updatePrepareSampleDepositFSM() {
+    private void updatePrepareSampleDepositFSM() {
         switch (prepareSampleDepositState) {
             case INACTIVE:
                 break;
@@ -577,13 +573,47 @@ public class JamalThree extends MecanumDrive {
     }
     //endregion
 
+    //region Prepare Specimen Deposit
+    private enum PrepareSpecimenDepositeState { INACTIVE, START, RAISING_SLIDES_AND_ARM };
+    private PrepareSpecimenDepositeState prepareSpecimenDepositeState = PrepareSpecimenDepositeState.INACTIVE;
+
+    private void updatePrepareSpecimenDepositFSM() {
+        switch(prepareSpecimenDepositeState) {
+            case INACTIVE:
+                break;
+            case START:
+                setUpperSlidesPos(UPPER_SLIDES_DEPOSIT_SPECIMEN);
+                setUpperArmPos( UPPER_ARM_DEPOSIT_SPECIMEN );
+                break;
+            case RAISING_SLIDES_AND_ARM:
+                if (isClose(getUpperSlidesPos(), UPPER_SLIDES_DEPOSIT_SPECIMEN, 100) &&
+                        isClose(getUpperArmPos(), UPPER_ARM_DEPOSIT_SPECIMEN, 25)
+                ) {
+                    setUpperClawPitchPos( UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN );
+                    prepareSpecimenDepositeState = PrepareSpecimenDepositeState.INACTIVE;
+                }
+                break;
+        }
+    }
+
+    public void startPrepareSpecimenDeposit() {
+        if (allMacrosInactive())
+            prepareSpecimenDepositeState = PrepareSpecimenDepositeState.START;
+    }
+
+    public void cancelPrepareSpecimenDeposit() {
+        prepareSpecimenDepositeState = PrepareSpecimenDepositeState.INACTIVE;
+    }
+
     public void prepareSpecimenDeposit() {
-//        if (!allMacrosInactive())
-//            return;
+        if (!allMacrosInactive())
+            return;
         setUpperSlidesPos(UPPER_SLIDES_DEPOSIT_SPECIMEN);
         setUpperArmPos( UPPER_ARM_DEPOSIT_SPECIMEN );
         setUpperClawPitchPos( UPPER_CLAW_PITCH_DEPOSIT_SPECIMEN );
 
     }
+
+    //endregion
 
 }

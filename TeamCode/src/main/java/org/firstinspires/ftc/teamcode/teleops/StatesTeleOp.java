@@ -16,6 +16,7 @@ public class StatesTeleOp extends LinearOpMode {
     public static double UPPER_SLIDE_MAX_SPEED = 0.9; // power
     public static double UPPER_ARM_MAX_SPEED = 800; // ticks / sec
     public static double UPPER_CLAW_PITCH_MAX_SPEED = 0.6; //updated from 0.4 will change to driver's preference
+    public static double UPPER_CLAW_MAX_SPEED = 0.2;
     public static double LOWER_SLIDE_MAX_SPEED = 0.6; // servo position / sec
     public static double LOWER_CLAW_PITCH_MAX_SPEED = 0.8;
     public static double LOWER_CLAW_YAW_MAX_SPEED = 0.4;
@@ -62,7 +63,8 @@ public class StatesTeleOp extends LinearOpMode {
             }
             else if (gamepad2.x) {
                 holdingUpperSlides = false;
-                robot.prepareSpecimenDeposit();
+                robot.startPrepareSpecimenDeposit();
+//                robot.prepareSpecimenDeposit();
             }
 
             // manual control of each individual part
@@ -140,6 +142,7 @@ public class StatesTeleOp extends LinearOpMode {
     boolean upperClawIsOpen = false;
     public void controlUpperClaw(Gamepad gamepad) {
         boolean input = gamepad.a;
+        double closeInput = gamepad.right_stick_x;
 
         if (input) {
             if (upperClawFirstInput) {
@@ -150,6 +153,13 @@ public class StatesTeleOp extends LinearOpMode {
             }
         } else {
             upperClawFirstInput = true;
+        }
+
+        if (closeInput != 0) {
+            double deltaTime = loopTimer.time();
+
+            double nextClawPos = robot.getUpperClawPos() + closeInput * deltaTime * UPPER_CLAW_MAX_SPEED;
+            robot.upperClaw.setPosition(nextClawPos);
         }
     }
 
@@ -243,13 +253,13 @@ public class StatesTeleOp extends LinearOpMode {
                 lowerClawYawPos = (lowerClawYawPos + 1) % 4;
                 switch(lowerClawYawPos) {
                     case 0:
-                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_HORIZONTAL_FLIPPED); break;
+                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_HORIZONTAL); break;
                     case 1:
-                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_135DEGREES); break;
+                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_45DEGREES); break;
                     case 2:
                         robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_VERTICAL); break;
                     case 3:
-                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_45DEGREES); break;
+                        robot.setLowerClawYawPos(JamalTwo.LOWER_CLAW_YAW_135DEGREES); break;
                 }
             }
         } else {

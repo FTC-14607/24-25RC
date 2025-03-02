@@ -96,6 +96,10 @@ public abstract class RobotBase {
         return Math.abs(a - b) < tol;
     }
 
+    public static boolean isClose(double a, double b, double tol) {
+        return Math.abs(a - b) < tol;
+    }
+
     /**
      * Range.clip except high/low bound order doesn't matter
      * @param num
