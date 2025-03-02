@@ -97,7 +97,7 @@ public class JamalThree extends MecanumDrive {
         UPPER_ARM_DEPOSIT_SAMPLE = 300;
 
     public final static double
-        UPPER_CLAW_CLOSED = 0.75, //these are the new values that seem to work
+        UPPER_CLAW_CLOSED = 0.72, //these are the new values that seem to work
         UPPER_CLAW_OPEN = 0.48;
 
     public final static double
@@ -401,7 +401,6 @@ public class JamalThree extends MecanumDrive {
             case INACTIVE:
                 break;
             case START:
-
                 openUpperClaw();
                 setUpperArmPos(UPPER_ARM_TRANSFER);
                 setLowerClawPitchPos(LOWER_CLAW_PITCH_TRANSFER);
@@ -420,6 +419,11 @@ public class JamalThree extends MecanumDrive {
 
                 setUpperSlidesPos(UPPER_SLIDES_TRANSFER);
                 setUpperClawPitchPos(UPPER_CLAW_PITCH_TRANSFER);
+                //you can change the time to make sure that transfer is as fast as possible
+                //reason: put this as when the pitch was happening as the slides were coming in causing the block to hit the top of the claw
+                if (transferTimer.seconds() < 0.5) {
+                    break;
+                }
                 transferTimer.reset();
 
                 if (getLowerSlidesPos() != LOWER_SLIDES_TRANSFER) {
